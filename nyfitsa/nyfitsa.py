@@ -86,7 +86,7 @@ class nyfitsaConfig:
 
 if __name__ == "__main__":
     config = tyro.cli(nyfitsaConfig)
-    servers = get_servers_quantities(config.urls)
+    servers = get_servers_quantities(list(set(config.urls))) # Suppression des doublons
     servers_percentages = calculate_percentages(servers)
     for name, percentage in servers_percentages.items():
         print(f"Nom du serveur: {name} -- valeur: {percentage}%")
