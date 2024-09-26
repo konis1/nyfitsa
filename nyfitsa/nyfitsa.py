@@ -1,4 +1,6 @@
+import dataclasses
 import requests
+import tyro
 
 from collections import defaultdict
 from typing import List, Dict
@@ -89,8 +91,22 @@ def calculate_percentages(servers: Dict[str, int]) -> Dict[str, float]:
         servers_percentages[server_name] = round((qty/total) * 100, 2)
     return servers_percentages
 
+# Fonction pour list ou juste string url ??
+
+@dataclasses.dataclass
+class nyfitsaConfig:
+    urls: list[str]
+    """
+
+    Provide different urls to get the stats.
+    urls should have the format http://www.example.com or https://www.example.com
+
+    """
+
 if __name__ == "__main__":
-    servers = get_servers_quantities(urls)
+    config = tyro.cli(nyfitsaConfig)
+    servers = get_servers_quantities(config.urls)
     servers_percentages = calculate_percentages(servers)
     for name, percentage in servers_percentages.items():
         print(f"Nom du serveur: {name} -- valeur: {percentage}%\n")
+    
