@@ -5,65 +5,29 @@ import tyro
 from collections import defaultdict
 from typing import List, Dict
 
-urls: List[str] = [
-    "https://www.wikipedia.org",
-    "https://www.google.com",
-    "https://www.youtube.com",
-    "https://www.facebook.com",
-    "https://www.amazon.com",
-    "https://www.twitter.com",
-    "https://www.instagram.com",
-    "https://www.linkedin.com",
-    "https://www.reddit.com",
-    "https://www.netflix.com",
-    "https://www.microsoft.com",
-    "https://www.apple.com",
-    "https://www.bbc.com",
-    "https://www.cnn.com",
-    "https://www.bloomberg.com",
-    "https://www.github.com",
-    "https://www.medium.com",
-    "https://www.stackoverflow.com",
-    "https://www.quora.com",
-    "https://www.nytimes.com",
-    "https://www.washingtonpost.com",
-    "https://www.forbes.com",
-    "https://www.ted.com",
-    "https://www.coursera.org",
-    "https://www.edx.org",
-    "https://www.udemy.com",
-    "https://www.khanacademy.org",
-    "https://www.nationalgeographic.com",
-    "https://www.spotify.com",
-    "https://www.dropbox.com",
-    "https://www.slack.com",
-    "https://www.zoom.us",
-    "https://www.adobe.com",
-    "https://www.airbnb.com",
-    "https://www.booking.com",
-    "https://www.expedia.com",
-    "https://www.tripadvisor.com",
-    "https://www.paypal.com",
-    "https://www.etsy.com",
-    "https://www.shopify.com",
-    "https://www.walmart.com",
-    "https://www.target.com",
-    "https://www.imdb.com",
-    "https://www.pinterest.com",
-    "https://www.flickr.com",
-    "https://www.soundcloud.com",
-    "https://www.hulu.com",
-    "https://www.reuters.com",
-    "https://www.aljazeera.com",
-    "https://www.theguardian.com"
-    ]
-
 def check_valid_url():
     return
 
 def get_servers_quantities(urls: List[str]) -> Dict[str, int]:
+    """
+
+    Récupère les noms de serveurs ainsi que le nombre d'occurences de chacun.
+
+    Cette fonction prend une liste d'urls en argument et retourne un dictionnaire avec le nom du serveur et le nombre d'occurences.
+
+    Parameters
+    ----------
+
+    urls: list of str
+        La liste des urls.
+
+    Returns
+    -------
+    dict of str, int
+        Un dictionnaire donc la clé est le nom du serveur et la valeur le nombre d'occurences.
+    
+    """
     servers: Dict[str, int] = defaultdict(int)
-    servers["no_response"] = 0
 
     #Parcours de chaque url dans la liste d'urls données
     for url in urls:
@@ -76,12 +40,31 @@ def get_servers_quantities(urls: List[str]) -> Dict[str, int]:
 
                 #Incrémentation du compteur pour ce serveur ou "unavailable"
                 servers[server_name] += 1
-        except requests.exceptions.RequestException:
+        except requests.exceptions.Timeout:
             #Incrémentation du compteur si timeout
-            servers["no_response"] += 1
+            servers["timeout"] += 1
+        except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError):
+            servers["errors"] += 1
     return(servers)
 
 def calculate_percentages(servers: Dict[str, int]) -> Dict[str, float]:
+    """
+    Calcul la quantité d'utilisation d'un serveur en pourcentage.
+
+    Cette fonction prend un dictionnaire avec une string en clé et un int en valeur puis retourne un dictionnaire avec les noms des serveurs en clés et le pourcentage en valeur.  
+
+    Parameters
+    ----------
+    servers: dict of str, int
+        Un dictionnaire donc la clé est le nom du serveur et la valeur le nombre d'occurences.
+
+    Returns
+    -------
+
+    dict of str, float
+        Un dictionnaire donc la clé est le nom du serveur et la valeur le nombre d'occurences par rapport aux nombre total, en pourcentage.
+
+    """
     servers_percentages: Dict[str, float] = {}
     # Nombre total de valeurs
     total: int = sum(servers.values())
@@ -90,8 +73,6 @@ def calculate_percentages(servers: Dict[str, int]) -> Dict[str, float]:
     for server_name, qty in servers.items():
         servers_percentages[server_name] = round((qty/total) * 100, 2)
     return servers_percentages
-
-# Fonction pour list ou juste string url ??
 
 @dataclasses.dataclass
 class nyfitsaConfig:
@@ -108,5 +89,5 @@ if __name__ == "__main__":
     servers = get_servers_quantities(config.urls)
     servers_percentages = calculate_percentages(servers)
     for name, percentage in servers_percentages.items():
-        print(f"Nom du serveur: {name} -- valeur: {percentage}%\n")
+        print(f"Nom du serveur: {name} -- valeur: {percentage}%")
     
