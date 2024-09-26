@@ -73,7 +73,6 @@ def calculate_percentages(servers: Dict[str, int]) -> Dict[str, float]:
     for server_name, qty in servers.items():
         servers_percentages[server_name] = round((qty/total) * 100, 2)
     return servers_percentages
-
 @dataclasses.dataclass
 class nyfitsaConfig:
     urls: list[str]
