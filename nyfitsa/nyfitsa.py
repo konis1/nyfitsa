@@ -5,8 +5,6 @@ import tyro
 from collections import defaultdict
 from typing import List, Dict
 
-def check_valid_url():
-    return
 
 def get_servers_quantities(urls: List[str]) -> Dict[str, int]:
     """
@@ -31,6 +29,7 @@ def get_servers_quantities(urls: List[str]) -> Dict[str, int]:
 
     #Parcours de chaque url dans la liste d'urls données
     for url in urls:
+
         try:
             #Délai d'attente de 10 secondes
             request: requests.models.Response = requests.get(url, timeout=10)

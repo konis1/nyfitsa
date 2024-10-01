@@ -18,7 +18,6 @@ def test_get_server_quantities_valid():
         result: Dict[str,int] = get_servers_quantities(urls)
         assert result == {"nginx": 2}
 
-
 def test_get_server_quantities_no_headers():
     urls: List[str] = ["http://www.google.com", "https://www.wikipedia.com"]
     with patch('requests.get') as mock_get:
@@ -30,10 +29,8 @@ def test_get_server_quantities_no_headers():
         result: Dict[str,int] = get_servers_quantities(urls)
         assert result == {"unavailable": 2}
 
-
 def test_get_server_quantities_timeout():
     urls: List[str] = ["http://www.google.com", "https://www.wikipedia.com"]
     with patch('requests.get', side_effect=requests.exceptions.Timeout):
-        result = get_servers_quantities(urls)
+        result: Dict[str,int] = get_servers_quantities(urls)
         assert result == {"timeout": 2}
-
