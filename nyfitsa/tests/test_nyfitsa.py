@@ -2,7 +2,7 @@
 import requests
 
 from unittest.mock import patch, MagicMock
-from nyfitsa.nyfitsa import get_servers_quantities
+from src.nyfitsa import get_servers_quantities
 from typing import List, Dict
 
 

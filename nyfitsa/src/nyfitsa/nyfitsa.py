@@ -1,10 +1,14 @@
-import dataclasses
 import requests
-import tyro
-
+from requests import structures
+from dataclasses import dataclass
 from collections import defaultdict
 from typing import List, Dict
 
+@dataclass
+class SiteInfos:
+    url: str
+    headers: structures.CaseInsensitiveDict[str]
+    response: requests.models.Response
 
 def get_servers_quantities(urls: List[str]) -> Dict[str, int]:
     """
@@ -31,11 +35,10 @@ def get_servers_quantities(urls: List[str]) -> Dict[str, int]:
     for url in urls:
 
         try:
-            #Délai d'attente de 10 secondes
-            request: requests.models.Response = requests.get(url, timeout=10)
-            if request.status_code == requests.codes.ok:
+            
+            if response.status_code == requests.codes.ok:
                 # Nom du serveur à partir de l'entête ou "unavailable" si l'information n'est pas dans l'entête
-                server_name: str = request.headers.get("server", "unavailable")
+                server_name: str = response.headers.get("server", "unavailable")
 
                 #Incrémentation du compteur pour ce serveur ou "unavailable"
                 servers[server_name] += 1
@@ -72,20 +75,6 @@ def calculate_percentages(servers: Dict[str, int]) -> Dict[str, float]:
     for server_name, qty in servers.items():
         servers_percentages[server_name] = round((qty/total) * 100, 2)
     return servers_percentages
-@dataclasses.dataclass
-class nyfitsaConfig:
-    urls: list[str]
-    """
 
-    Provide different urls to get the stats.
-    urls should have the format http://www.example.com or https://www.example.com
 
-    """
-
-if __name__ == "__main__":
-    config = tyro.cli(nyfitsaConfig)
-    servers = get_servers_quantities(list(set(config.urls))) # Suppression des doublons
-    servers_percentages = calculate_percentages(servers)
-    for name, percentage in servers_percentages.items():
-        print(f"Nom du serveur: {name} -- valeur: {percentage}%")
     
