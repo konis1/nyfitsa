@@ -2,7 +2,7 @@ import requests
 from requests import structures
 from dataclasses import dataclass
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict
 
 @dataclass
 class SiteInfos:
@@ -49,7 +49,7 @@ class SiteInfos:
 #             servers["errors"] += 1
 #     return(servers)
 
-def calculate_percentages(websites: List[SiteInfos]):
+def calculate_percentages(websites: Dict[str, SiteInfos]):
     """
     Calcul la quantité d'utilisation d'un serveur en pourcentage.
 
@@ -69,11 +69,11 @@ def calculate_percentages(websites: List[SiteInfos]):
     """
     servers: Dict[str, int] = defaultdict(int)
     servers_percentages: Dict[str, float] = {}
-    for website in websites:
+    for _, infos in websites.items():
         try:
-            if website.response.status_code == requests.codes.ok:
+            if infos.response.status_code == requests.codes.ok:
                 # Nom du serveur à partir de l'entête ou "unavailable" si l'information n'est pas dans l'entête
-                server_name: str = website.response.headers.get("server", "unavailable")
+                server_name: str = infos.response.headers.get("server", "unavailable")
 
                 #Incrémentation du compteur pour ce serveur ou "unavailable"
                 servers[server_name] += 1
