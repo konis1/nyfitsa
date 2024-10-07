@@ -1,55 +1,30 @@
 import requests
+# NE fonctionne pas si uniquement requests: question
 from requests import structures
 from dataclasses import dataclass
 from collections import defaultdict
-from typing import Dict
+from typing import Dict, List
+
 
 @dataclass
 class SiteInfos:
     url: str
-    headers: structures.CaseInsensitiveDict[str]
-    response: requests.models.Response
+    headers: structures.CaseInsensitiveDict[str] | None
+    response: requests.models.Response | None
 
-# def get_all_servers_quantities(headers: structures.CaseInsensitiveDict[str]) -> Dict[str, int]:
-#     """
+def fetch_site_infos(urls: List[str]) -> Dict[str,SiteInfos]: 
+    websites: Dict[str, SiteInfos] = {}
+    for url in urls:
+        try:
+        #Délai d'attente de 10 secondes
+            response: requests.models.Response = requests.get(url, timeout=10)
+            headers: structures.CaseInsensitiveDict[str] = response.headers
+            websites[url] = SiteInfos(url= url, response = response, headers= headers)
+        except requests.exceptions.Timeout:
+            websites[url] = SiteInfos(url=url, response=None, headers=None)
+    return websites
 
-#     Récupère les noms de serveurs ainsi que le nombre d'occurences de chacun.
-
-#     Cette fonction prend une liste d'urls en argument et retourne un dictionnaire avec le nom du serveur et le nombre d'occurences.
-
-#     Parameters
-#     ----------
-
-#     urls: list of str
-#         La liste des urls.
-
-#     Returns
-#     -------
-#     dict of str, int
-#         Un dictionnaire donc la clé est le nom du serveur et la valeur le nombre d'occurences.
-    
-#     """
-#     servers: Dict[str, int] = defaultdict(int)
-
-#     #Parcours de chaque url dans la liste d'urls données
-#     for url in urls:
-
-#         try:
-            
-#             if response.status_code == requests.codes.ok:
-#                 # Nom du serveur à partir de l'entête ou "unavailable" si l'information n'est pas dans l'entête
-#                 server_name: str = response.headers.get("server", "unavailable")
-
-#                 #Incrémentation du compteur pour ce serveur ou "unavailable"
-#                 servers[server_name] += 1
-#         except requests.exceptions.Timeout:
-#             #Incrémentation du compteur si timeout
-#             servers["timeout"] += 1
-#         except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError):
-#             servers["errors"] += 1
-#     return(servers)
-
-def calculate_percentages(websites: Dict[str, SiteInfos]):
+def calculate_percentages(websites: Dict[str, SiteInfos], header: str = "server"):
     """
     Calcul la quantité d'utilisation d'un serveur en pourcentage.
 
@@ -67,29 +42,29 @@ def calculate_percentages(websites: Dict[str, SiteInfos]):
         Un dictionnaire donc la clé est le nom du serveur et la valeur le nombre d'occurences par rapport aux nombre total, en pourcentage.
 
     """
-    servers: Dict[str, int] = defaultdict(int)
-    servers_percentages: Dict[str, float] = {}
+    headers: Dict[str, int] = defaultdict(int)
+    headers_percentages: Dict[str, float] = {}
     for _, infos in websites.items():
         try:
-            if infos.response.status_code == requests.codes.ok:
+            if infos.response is not None and infos.response.status_code == requests.codes.ok:
                 # Nom du serveur à partir de l'entête ou "unavailable" si l'information n'est pas dans l'entête
-                server_name: str = infos.response.headers.get("server", "unavailable")
+                header_name: str = infos.response.headers.get(header, "unavailable")
 
                 #Incrémentation du compteur pour ce serveur ou "unavailable"
-                servers[server_name] += 1
+                headers[header_name] += 1
         except requests.exceptions.Timeout:
             #Incrémentation du compteur si timeout
-            servers["timeout"] += 1
+            headers["timeout"] += 1
         except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError):
-            servers["errors"] += 1
+            headers["errors"] += 1
 
     # Nombre total de valeurs
-    total: int = sum(servers.values())
+    total: int = sum(headers.values())
     if total == 0:
-        return(servers_percentages)
-    for server_name, qty in servers.items():
-        servers_percentages[server_name] = round((qty/total) * 100, 2)
-    return servers_percentages
+        return(headers_percentages)
+    for server_name, qty in headers.items():
+        headers_percentages[server_name] = round((qty/total) * 100, 2)
+    return headers_percentages
 
 
     

@@ -9,3 +9,5 @@ class NyfitsaConfig:
     urls should have the format http://www.example.com or https://www.example.com
 
     """
+    header: str = "server"
+
