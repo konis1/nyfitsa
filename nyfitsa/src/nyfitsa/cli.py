@@ -9,7 +9,7 @@ class NyfitsaConfig:
     urls should have the format http://www.example.com or https://www.example.com
 
     """
-    header: str = "server"
+    headers: tuple[str, ...] = ("server",'X-Frame-Options', 'X-Content-Type-Options','Referrer-Policy','X-XSS-Protection')
     """
 
     Provide the type of header you want the stats
