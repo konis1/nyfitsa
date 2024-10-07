@@ -11,6 +11,7 @@ class SiteInfos:
     url: str
     headers: structures.CaseInsensitiveDict[str] | None
     response: requests.models.Response | None
+    err_code: str = ""
 
 def fetch_site_infos(urls: List[str]) -> Dict[str,SiteInfos]: 
     websites: Dict[str, SiteInfos] = {}
@@ -21,10 +22,12 @@ def fetch_site_infos(urls: List[str]) -> Dict[str,SiteInfos]:
             headers: structures.CaseInsensitiveDict[str] = response.headers
             websites[url] = SiteInfos(url= url, response = response, headers= headers)
         except requests.exceptions.Timeout:
-            websites[url] = SiteInfos(url=url, response=None, headers=None)
+            websites[url] = SiteInfos(url=url, response=None, headers=None, err_code= "timeout")
+        except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError):
+            websites[url] = SiteInfos(url=url, response=None, headers=None, err_code= "errors")
     return websites
 
-def calculate_percentages(websites: Dict[str, SiteInfos], header: str = "server"):
+def calculate_percentages(websites: Dict[str, SiteInfos], header: str = "server") -> Dict[str, float]:
     """
     Calcul la quantité d'utilisation d'un serveur en pourcentage.
 
@@ -45,17 +48,16 @@ def calculate_percentages(websites: Dict[str, SiteInfos], header: str = "server"
     headers: Dict[str, int] = defaultdict(int)
     headers_percentages: Dict[str, float] = {}
     for _, infos in websites.items():
-        try:
-            if infos.response is not None and infos.response.status_code == requests.codes.ok:
-                # Nom du serveur à partir de l'entête ou "unavailable" si l'information n'est pas dans l'entête
-                header_name: str = infos.response.headers.get(header, "unavailable")
+        if infos.response is not None and infos.response.status_code == requests.codes.ok:
+            # Nom du serveur à partir de l'entête ou "unavailable" si l'information n'est pas dans l'entête
+            header_name: str = infos.response.headers.get(header, "unavailable")
 
-                #Incrémentation du compteur pour ce serveur ou "unavailable"
-                headers[header_name] += 1
-        except requests.exceptions.Timeout:
-            #Incrémentation du compteur si timeout
+            #Incrémentation du compteur pour ce serveur ou "unavailable"
+            headers[header_name] += 1
+        elif infos.err_code == "timeout":
+        #Incrémentation du compteur si timeout
             headers["timeout"] += 1
-        except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError):
+        else:
             headers["errors"] += 1
 
     # Nombre total de valeurs
