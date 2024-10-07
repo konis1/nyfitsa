@@ -10,4 +10,9 @@ class NyfitsaConfig:
 
     """
     header: str = "server"
+    """
+
+    Provide the type of header you want the stats
+
+    """
 

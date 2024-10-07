@@ -6,9 +6,9 @@ import tyro
 def main():
     config = tyro.cli(NyfitsaConfig)
     websites = fetch_site_infos(config.urls)
-    servers_percentages = calculate_percentages(websites)
-    for name, percentage in servers_percentages.items():
-        print(f"Nom du serveur: {name} -- valeur: {percentage}%")
+    headers_percentages = calculate_percentages(websites, config.header)
+    for name, percentage in headers_percentages.items():
+        print(f"Header: {config.header}, content: {name} -- value: {percentage}%")
 
 if __name__ == "__main__":
     main()
