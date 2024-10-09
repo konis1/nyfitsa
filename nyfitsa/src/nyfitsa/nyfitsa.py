@@ -2,7 +2,7 @@ from enum import Enum
 from pydantic import BaseModel, HttpUrl
 from requests import Response, structures
 from requests.exceptions import Timeout, ConnectionError, HTTPError
-from typing import Dict, List, DefaultDict
+from typing import Dict, List
 
 import requests
 

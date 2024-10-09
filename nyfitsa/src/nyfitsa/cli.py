@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from pydantic import HttpUrl
 import tyro 
-from .nyfitsa import Results., fetch_site_infos
+from .nyfitsa import fetch_site_infos
 
 @dataclass
 class NyfitsaConfig:
