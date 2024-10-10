@@ -52,6 +52,28 @@ class Results(BaseModel):
     def stats_xss_protection(self):
         pass
 
+def create_site_info(url: str, server: str, x_frame_options: str, x_content_type_options: str,
+                     referrer_policy: str, xss_protection: str, response: Response, err_code=None) -> SiteInfos:
+    return SiteInfos(
+        url=url,
+        server=server,
+        x_frame_options=x_frame_options,
+        x_content_type_options=x_content_type_options,
+        referrer_policy=referrer_policy,
+        xss_protection=xss_protection,
+        err_code=err_code,
+        _response=response
+    )
+
+def fetch_headers(response: Response) -> structures.CaseInsensitiveDict:
+    headers: structures.CaseInsensitiveDict[str] = response.headers
+    return {
+        "server": headers.get("server", "unavailable"),
+        "x_frame_options": headers.get("X-Frame-Options", "unavailable"),
+        "x_content_type_options": headers.get("X-Content-Type-Options", "unavailable"),
+        "referrer_policy": headers.get("Referrer-Policy", "unavailable"),
+        "xss_protection": headers.get("X-XSS-Protection", "unavailable")
+    }
 
 def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]:
     websites: List[SiteInfos] = []
@@ -61,66 +83,28 @@ def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]:
             response: Response = requests.get(str(url), timeout=1)
             response.raise_for_status()
 
-            headers: structures.CaseInsensitiveDict[str] = response.headers
-            server: str = headers.get("server", "unavailable")
-            x_frame_options: str = headers.get("X-Frame-Options", "unavailable")
-            x_content_type_options: str = headers.get("X-Content-Type-Options", "unavailable")
-            referrer_policy: str = headers.get("Referrer-Policy", "unavailable")
-            xss_protection: str = headers.get("X-XSS-Protection", "unavailable")
-            websites.append(
-                SiteInfos(
-                    url= url,
-                    server= server,
-                    x_frame_options= x_frame_options,
-                    x_content_type_options= x_content_type_options,
-                    referrer_policy= referrer_policy,
-                    xss_protection= xss_protection,
-                    err_code= None,
-                    _response = response
-                )
+            headers: structures.CaseInsensitiveDict[str] = fetch_headers(response)
+
+            site_infos = create_site_info(
+                url=url,
+                server=headers["server"],
+                x_frame_options=headers["x_frame_options"],
+                x_content_type_options=headers["x_content_type_options"],
+                referrer_policy=headers["referrer_policy"],
+                xss_protection=headers["xss_protection"],
+                response=response,
+                err_code=None
             )
+            websites.append(site_infos)
 
         except Timeout:
-            websites.append(
-                SiteInfos(
-                    url= url,
-                    server= None,
-                    x_frame_options= None,
-                    x_content_type_options= None,
-                    referrer_policy= None,
-                    xss_protection= None,
-                    err_code= ErrorCode.TIMEOUT,
-                    _response = None
-                )
-            )
+            websites.append(create_site_info(url,None,None,None,None,None,None,ErrorCode.TIMEOUT,))
 
         except ConnectionError:
-            websites.append(
-                SiteInfos(
-                    url= url,
-                    server= None,
-                    x_frame_options= None,
-                    x_content_type_options= None,
-                    referrer_policy= None,
-                    xss_protection= None,
-                    err_code= ErrorCode.CONNECTION_ERROR,
-                    _response = None
-                )
-            )
+            websites.append(create_site_info(url,None,None,None,None,None,None,ErrorCode.CONNECTION_ERROR,))
 
         except HTTPError:
-            websites.append(
-                SiteInfos(
-                    url= url,
-                    server= None,
-                    x_frame_options= None,
-                    x_content_type_options= None,
-                    referrer_policy= None,
-                    xss_protection= None,
-                    err_code= ErrorCode.HTTP_ERROR,
-                    _response = None
-                )
-            )
+            websites.append(create_site_info(url,None,None,None,None,None,None,ErrorCode.HTTP_ERROR,))
 
     return websites
 
