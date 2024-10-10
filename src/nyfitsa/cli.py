@@ -3,7 +3,7 @@ from pathlib import Path
 from pydantic import HttpUrl
 import tyro
 from.nyfitsa import Results
-from .nyfitsa import fetch_site_infos, print_headers_stats
+from .nyfitsa import fetch_site_infos
 
 @dataclass
 class NyfitsaConfig:
@@ -35,4 +35,4 @@ def main():
     websites = fetch_site_infos(config.urls)
     if  config.server_stats:
         stats = Results(site_infos= websites)
-        print_headers_stats(stats)
+        stats.print_stats("server")

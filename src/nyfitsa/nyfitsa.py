@@ -49,6 +49,19 @@ class Results(BaseModel):
 
         return server_stats
 
+    def print_stats(self, stat_type: str) -> None:
+         # Appeler la méthode en fonction du type de statistique demandé
+        if stat_type == "server":
+            stats = self.stats_server()
+
+        # Vérifie si des statistiques existent et les imprime
+        if stats:
+            print(f"{stat_type} stats:")
+            for key, percentage in stats.items():
+                print(f"- {key}: {percentage}%")
+        else:
+            print("No stats available")
+
     def stats_xss_protection(self):
         pass
 
@@ -114,19 +127,3 @@ def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]:
             existing_url.add(url)
 
     return websites
-
-def print_headers_stats(stats: Dict[str, float]):
-    """
-
-    Print the headers stats
-
-    Parameters
-    ----------
-    header_stats: dict of str as key and dict of str,flaot as value
-        A dict with the header name as key and as values the dict with the header content as jey and the percentage as value.
-
-    """
-    print("-" * 20)
-    for header_name, result in stats.items():
-        print(f"Header: {header_name}  -- value: {result}%")
-        print("-" * 20)
