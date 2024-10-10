@@ -2,7 +2,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from pydantic import HttpUrl
 import tyro
-from .nyfitsa import fetch_site_infos, Results
+from.nyfitsa import Results
+from .nyfitsa import fetch_site_infos, print_headers_stats
 
 @dataclass
 class NyfitsaConfig:
@@ -14,19 +15,24 @@ class NyfitsaConfig:
 
     """
 
-    headers: tuple[str, ...] = ("server",'X-Frame-Options', 'X-Content-Type-Options','Referrer-Policy','X-XSS-Protection')
+    server_stats: bool = False
     """
 
-    Provide the type of header you want the stats
+    Option to calculate the server stats from the urls list
 
     """
+
     file: Path|None = None
-    """"urls in a file. 1 url by line
+    """"
+
+    urls in a file. 1 url by line
+
     """
 
 
 def main():
     config = tyro.cli(NyfitsaConfig)
     websites = fetch_site_infos(config.urls)
-    stats = Results(site_infos= websites)
-    print(stats.stats_server())
+    if  config.server_stats:
+        stats = Results(site_infos= websites)
+        print_headers_stats(stats)
