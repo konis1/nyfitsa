@@ -77,14 +77,17 @@ def fetch_headers(response: Response) -> structures.CaseInsensitiveDict:
 
 def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]:
     websites: List[SiteInfos] = []
+    existing_url = set()
     for url in urls:
+        if url in existing_url:
+            continue
+
         try:
             #Délai d'attente de 10 secondes
             response: Response = requests.get(str(url), timeout=1)
             response.raise_for_status()
 
             headers: structures.CaseInsensitiveDict[str] = fetch_headers(response)
-
             site_infos = create_site_info(
                 url=url,
                 server=headers["server"],
@@ -96,15 +99,19 @@ def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]:
                 err_code=None
             )
             websites.append(site_infos)
+            existing_url.add(url)
 
         except Timeout:
             websites.append(create_site_info(url,None,None,None,None,None,None,ErrorCode.TIMEOUT,))
+            existing_url.add(url)
 
         except ConnectionError:
             websites.append(create_site_info(url,None,None,None,None,None,None,ErrorCode.CONNECTION_ERROR,))
+            existing_url.add(url)
 
         except HTTPError:
             websites.append(create_site_info(url,None,None,None,None,None,None,ErrorCode.HTTP_ERROR,))
+            existing_url.add(url)
 
     return websites
 
