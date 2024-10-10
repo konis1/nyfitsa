@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from pathlib import Path
 from pydantic import HttpUrl
-import tyro 
-from .nyfitsa import fetch_site_infos
+import tyro
+from .nyfitsa import fetch_site_infos, Results
 
 @dataclass
 class NyfitsaConfig:
@@ -13,7 +13,7 @@ class NyfitsaConfig:
     urls should have the format http://www.example.com or https://www.example.com
 
     """
-    
+
     headers: tuple[str, ...] = ("server",'X-Frame-Options', 'X-Content-Type-Options','Referrer-Policy','X-XSS-Protection')
     """
 
@@ -28,4 +28,5 @@ class NyfitsaConfig:
 def main():
     config = tyro.cli(NyfitsaConfig)
     websites = fetch_site_infos(config.urls)
-    print(websites)
+    stats = Results(site_infos= websites)
+    print(stats.stats_server())

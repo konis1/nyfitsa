@@ -2,7 +2,7 @@ from enum import Enum
 from pydantic import BaseModel, HttpUrl
 from requests import Response, structures
 from requests.exceptions import Timeout, ConnectionError, HTTPError
-from typing import Dict, List
+from typing import Dict, List, DefaultDict
 
 import requests
 
@@ -15,7 +15,7 @@ class ErrorCode(Enum):
 
 class SiteInfos(BaseModel):
     url: HttpUrl
-    server: str|None 
+    server: str|None
     x_frame_options: str|None
     x_content_type_options: str|None
     referrer_policy: str|None
@@ -23,15 +23,15 @@ class SiteInfos(BaseModel):
     err_code: ErrorCode|None
     _response: Response|None
 
-class Results:
+class Results(BaseModel):
     site_infos: List[SiteInfos]
 
     def stats_server(self) -> Dict[str, float]:
-        server_counter: Dict[str,int] = {}
+        server_counter: Dict[str,int] = DefaultDict(int)
         for site in self.site_infos:
             if site.server is not None and site.err_code is None:
                 server_counter[site.server] += 1
-            elif site.err_code == ErrorCode.TIMEOUT:
+            elif site.err_code  == ErrorCode.TIMEOUT:
                 server_counter["timeout"] += 1
             elif site.err_code == ErrorCode.CONNECTION_ERROR:
                 server_counter["connection_error"] += 1
@@ -53,12 +53,12 @@ class Results:
         pass
 
 
-def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]: 
+def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]:
     websites: List[SiteInfos] = []
     for url in urls:
         try:
             #Délai d'attente de 10 secondes
-            response: Response = requests.get(str(url), timeout=10)
+            response: Response = requests.get(str(url), timeout=1)
             response.raise_for_status()
 
             headers: structures.CaseInsensitiveDict[str] = response.headers
@@ -69,7 +69,7 @@ def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]:
             xss_protection: str = headers.get("X-XSS-Protection", "unavailable")
             websites.append(
                 SiteInfos(
-                    url= url, 
+                    url= url,
                     server= server,
                     x_frame_options= x_frame_options,
                     x_content_type_options= x_content_type_options,
@@ -83,7 +83,7 @@ def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]:
         except Timeout:
             websites.append(
                 SiteInfos(
-                    url= url, 
+                    url= url,
                     server= None,
                     x_frame_options= None,
                     x_content_type_options= None,
@@ -93,11 +93,11 @@ def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]:
                     _response = None
                 )
             )
-            
+
         except ConnectionError:
             websites.append(
                 SiteInfos(
-                    url= url, 
+                    url= url,
                     server= None,
                     x_frame_options= None,
                     x_content_type_options= None,
@@ -111,7 +111,7 @@ def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]:
         except HTTPError:
             websites.append(
                 SiteInfos(
-                    url= url, 
+                    url= url,
                     server= None,
                     x_frame_options= None,
                     x_content_type_options= None,
@@ -121,7 +121,7 @@ def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]:
                     _response = None
                 )
             )
-        
+
     return websites
 
 # output = fetch_site_infos()
@@ -131,7 +131,7 @@ def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]:
 #     """
 #     Calculate the percentage of each header content across a list of given websites.
 
-#     This function takes a dictionary with a string as a key and `SiteInfos` as the value, 
+#     This function takes a dictionary with a string as a key and `SiteInfos` as the value,
 #     along with a list of headers to analyze. It returns a nested dictionary with header names
 #     as keys and dictionaries of header content percentages.
 
@@ -153,7 +153,7 @@ def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]:
 #     Returns
 #     -------
 #     dict of str, dict of str, float
-#         A dictionary where each key is the name of a header, and each value is another dictionary containing 
+#         A dictionary where each key is the name of a header, and each value is another dictionary containing
 #         header content as keys and their corresponding percentages as values.
 #     """
 #     final_results: Dict[str, Dict[str,float]] = {}
@@ -179,7 +179,7 @@ def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]:
 #             else:
 #                 headers_content_counter["errors"] += 1
 
-#         # Je calclule la moyenne: 
+#         # Je calclule la moyenne:
 #         headers_percentages: Dict[str, float] = {}
 #         total: int = sum(headers_content_counter.values())
 
@@ -193,13 +193,13 @@ def fetch_site_infos(urls: List[HttpUrl]) -> List[SiteInfos]:
 def print_headers_stats(stats: Dict[str, float]):
     """
 
-    Print the headers stats 
+    Print the headers stats
 
     Parameters
     ----------
     header_stats: dict of str as key and dict of str,flaot as value
         A dict with the header name as key and as values the dict with the header content as jey and the percentage as value.
-    
+
     """
     print("-" * 20)
     for header_name, result in stats.items():
