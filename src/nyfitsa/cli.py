@@ -1,17 +1,17 @@
-from dataclasses import dataclass
 from pathlib import Path
-from pydantic import HttpUrl
+from pydantic import BaseModel
 import tyro
-from.nyfitsa import Results
+from .nyfitsa import Results
 from .nyfitsa import fetch_site_infos
 
-@dataclass
-class NyfitsaConfig:
-    urls: list[HttpUrl]
+
+class NyfitsaConfig(BaseModel):
+    urls: list[str] = []
     """
 
     Provide different urls to get the headers data.
-    urls should have the format http://www.example.com or https://www.example.com
+    urls should have the format http://www.example.com
+    or https://www.example.com
 
     """
 
@@ -22,7 +22,7 @@ class NyfitsaConfig:
 
     """
 
-    file: Path|None = None
+    file: Path | None = None
     """"
 
     urls in a file. 1 url by line
@@ -32,7 +32,13 @@ class NyfitsaConfig:
 
 def main():
     config = tyro.cli(NyfitsaConfig)
-    websites = fetch_site_infos(config.urls)
-    if  config.server_stats:
-        stats = Results(site_infos= websites)
+    if config.file is not None:
+        # Open file
+        config.urls = []
+        with open(config.file, "r") as file:
+            # Put each url / line in a list
+            for line in file:
+                config.urls.append(line.strip())
+    stats: Results = fetch_site_infos(config.urls)
+    if config.server_stats:
         stats.print_stats("server")
