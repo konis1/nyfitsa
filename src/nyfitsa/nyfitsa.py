@@ -4,9 +4,8 @@ from requests import Response, structures
 from requests.exceptions import Timeout, ConnectionError, HTTPError
 from typing import Dict, List, Any, Literal
 from collections import defaultdict
-
 import requests
-
+from tqdm import tqdm
 
 class ErrorCode(Enum):
     TIMEOUT = "timeout"
@@ -182,7 +181,7 @@ def fetch_site_infos(urls: List[str]) -> Results:
     websites: List[Dict[str, Any]] = []
     existing_url: set[str] = set()
     # If url already analyzed then skip
-    for url in urls:
+    for url in tqdm(urls):
         if url in existing_url:
             continue
 
