@@ -41,12 +41,18 @@ class SiteInfos(BaseModel):
     _response: Response | None = None
 
 
-# fields are the classes SIteInfos attributes except url, err_code and response
-fields = [k for k in SiteInfos.model_fields if k != "url"]
+# fields are the class SIteInfos attributes except url, err_code and response
+# fields = [k for k in SiteInfos.model_fields if k not in
+#           ["url", "err_code", "_response"]]
 
-
-# Litteral composed of the fields
-StatType = Literal[*fields]
+# Literal composed of the different headers
+StatType = Literal[
+    "server",
+    "x_frame_options",
+    "x_content_type_options",
+    "referrer_policy",
+    "xss_protection",
+]
 
 
 """
@@ -115,7 +121,7 @@ class Results(BaseModel):
 
         if total > 0:
             for element, qty in counter.items():
-                stats[element] = round((qty/total) * 100, 2)
+                stats[element] = round((qty / total) * 100, 2)
 
         return stats
 
@@ -132,18 +138,24 @@ class Results(BaseModel):
         return self._calculate_stats("x_content_type_options")
 
     def stats_referrer_policy(self) -> Dict[str, float]:
-        return self._calculate_stats("Referrer-Policy")
+        return self._calculate_stats("referrer_policy")
 
     def print_stats(
-            self,
-            stat_type: Literal[
-                "server",
-                "xss_protection",
-                ] | None = None) -> None:
+        self,
+        stat_type: StatType | None = None
+    ) -> None:
         stats: Dict[str, float] | None = None
         # Appeler la méthode en fonction du type de statistique demandé
         if stat_type == "server":
             stats = self.stats_server()
+        elif stat_type == "xss_protection":
+            stats = self.stats_xss_protection()
+        elif stat_type == "x_frame_options":
+            stats = self.stats_x_frames_options()
+        elif stat_type == "x_content_type_options":
+            stats = self.stats_x_content_type_options()
+        elif stat_type == "referrer_policy":
+            stats = self.stats_referrer_policy()
 
         # Vérifie si des statistiques existent et les imprime
         if isinstance(stats, dict):
@@ -159,11 +171,9 @@ def fetch_headers(response: Response) -> Dict[str, str]:
     return {
         "server": headers.get("server", "unavailable"),
         "x_frame_options": headers.get("X-Frame-Options", "unavailable"),
-        "x_content_type_options": headers.get(
-            "X-Content-Type-Options", "unavailable"
-            ),
+        "x_content_type_options": headers.get("X-Content-Type-Options", "unavailable"),
         "referrer_policy": headers.get("Referrer-Policy", "unavailable"),
-        "xss_protection": headers.get("X-XSS-Protection", "unavailable")
+        "xss_protection": headers.get("X-XSS-Protection", "unavailable"),
     }
 
 
@@ -190,7 +200,7 @@ def fetch_site_infos(urls: List[str]) -> Results:
                 "referrer_policy": headers["referrer_policy"],
                 "xss_protection": headers["xss_protection"],
                 "response": response,
-                "err_code": None
+                "err_code": None,
             }
 
         except Timeout:
