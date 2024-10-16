@@ -9,7 +9,7 @@ class NyfitsaConfig(BaseModel):
     urls: list[str] = []
     """
 
-    Provide different urls to get the headers data.
+    Provide a list of different urls to get the headers data.
     urls should have the format http://www.example.com
     or https://www.example.com
 
@@ -18,14 +18,14 @@ class NyfitsaConfig(BaseModel):
     server_stats: bool = False
     """
 
-    Option to calculate the server stats from the urls list
+    Activate this option to calculate the server stats from the urls list
 
     """
 
     file: Path | None = None
     """"
 
-    urls in a file. 1 url by line
+    urls in a txt file. 1 url by line
 
     """
 

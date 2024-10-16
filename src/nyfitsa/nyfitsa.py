@@ -14,6 +14,22 @@ class ErrorCode(Enum):
     HTTP_ERROR = "http_error"
 
 
+"""
+
+Represents the different information we get from a website/
+
+Attributes:
+url(str):The website's url
+server(str): The server name
+x_frame_options(str): The content of x_frame_options header
+referrer_policy(str): The content of referrer policy header
+xss_protection(str): The content of xss_protection header
+err_vode(ErrorCode | None): The Error code if there is one
+_response(Response): The response we get for the url
+
+"""
+
+
 class SiteInfos(BaseModel):
     url: str
     server: str | None = None
@@ -25,8 +41,54 @@ class SiteInfos(BaseModel):
     _response: Response | None = None
 
 
+# fields are the classes SIteInfos attributes except url, err_code and response
 fields = [k for k in SiteInfos.model_fields if k != "url"]
-StatType: Literal | None = Literal[*fields]
+
+
+# Litteral composed of the fields
+StatType = Literal[*fields]
+
+
+"""
+
+A class for calculating and printing statistics for various
+HTTP headers obtained from a list of SiteInfos objects.
+
+ttributes
+----------
+site_infos : List[SiteInfos]
+    A list of `SiteInfos` objects, each representing information
+    about a specific website, including headers and response status.
+
+Methods
+-------
+stats_server() -> Dict[str, float]
+    Calculates the percentage distribution of different
+    server types among the websites.
+
+stats_xss_protection() -> Dict[str, float]
+    Calculates the percentage distribution of the
+    'X-XSS-Protection' header among the websites.
+
+stats_x_frames_options() -> Dict[str, float]
+    Calculates the percentage distribution of the
+    'X-Frame-Options' header among the websites.
+
+stats_x_content_type_options() -> Dict[str, float]
+    Calculates the percentage distribution of the
+    'X-Content-Type-Options' header among the websites.
+
+stats_referrer_policy() -> Dict[str, float]
+    Calculates the percentage distribution of the
+    'Referrer-Policy' header among the websites.
+
+print_stats(
+    stat_type: Literal["server", "xss_protection"] | None = None
+    ) -> None
+    Prints the statistics for the specified header type, if available.
+
+
+"""
 
 
 class Results(BaseModel):
@@ -61,13 +123,13 @@ class Results(BaseModel):
         return self._calculate_stats("server")
 
     def stats_xss_protection(self) -> Dict[str, float]:
-        return self._calculate_stats("X-XSS-Protection")
+        return self._calculate_stats("xss_protection")
 
     def stats_x_frames_options(self) -> Dict[str, float]:
-        return self._calculate_stats("X-Frame-Options")
+        return self._calculate_stats("x_frame_options")
 
     def stats_x_content_type_options(self) -> Dict[str, float]:
-        return self._calculate_stats("X-Content-Type-Options")
+        return self._calculate_stats("x_content_type_options")
 
     def stats_referrer_policy(self) -> Dict[str, float]:
         return self._calculate_stats("Referrer-Policy")
@@ -92,28 +154,6 @@ class Results(BaseModel):
             print("No stats available")
 
 
-def create_site_info(
-        url: str,
-        server: str | None,
-        x_frame_options: str | None,
-        x_content_type_options: str | None,
-        referrer_policy: str | None,
-        xss_protection: str | None,
-        response: Response | None,
-        err_code: ErrorCode | None = None
-        ) -> SiteInfos:
-    return SiteInfos(
-        url=url,
-        server=server,
-        x_frame_options=x_frame_options,
-        x_content_type_options=x_content_type_options,
-        referrer_policy=referrer_policy,
-        xss_protection=xss_protection,
-        err_code=err_code,
-        _response=response
-    )
-
-
 def fetch_headers(response: Response) -> Dict[str, str]:
     headers: structures.CaseInsensitiveDict[str] = response.headers
     return {
@@ -130,6 +170,7 @@ def fetch_headers(response: Response) -> Dict[str, str]:
 def fetch_site_infos(urls: List[str]) -> Results:
     websites: List[Dict[str, Any]] = []
     existing_url: set[str] = set()
+    # If url already analyzed then skip
     for url in urls:
         if url in existing_url:
             continue
