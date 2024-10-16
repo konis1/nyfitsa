@@ -8,6 +8,7 @@ dependencies = [
     "pydantic>=2.9.2",
     "requests>=2.32.3",
     "tyro>=0.8.11",
+    "tqdm>=4.66.5",
 ]
 
 [tool.uv]

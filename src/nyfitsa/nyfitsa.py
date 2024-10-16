@@ -171,7 +171,8 @@ def fetch_headers(response: Response) -> Dict[str, str]:
     return {
         "server": headers.get("server", "unavailable"),
         "x_frame_options": headers.get("X-Frame-Options", "unavailable"),
-        "x_content_type_options": headers.get("X-Content-Type-Options", "unavailable"),
+        "x_content_type_options": headers.get(
+            "X-Content-Type-Options", "unavailable"),
         "referrer_policy": headers.get("Referrer-Policy", "unavailable"),
         "xss_protection": headers.get("X-XSS-Protection", "unavailable"),
     }
