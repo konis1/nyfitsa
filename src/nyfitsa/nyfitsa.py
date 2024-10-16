@@ -6,6 +6,9 @@ from typing import Dict, List, Any, Literal
 from collections import defaultdict
 import requests
 from tqdm import tqdm
+import multiprocessing
+import os
+
 
 class ErrorCode(Enum):
     TIMEOUT = "timeout"
@@ -121,6 +124,7 @@ class Results(BaseModel):
         if total > 0:
             for element, qty in counter.items():
                 stats[element] = round((qty / total) * 100, 2)
+        stats = dict(sorted(stats.items(), key=lambda x: x[1], reverse=True))
 
         return stats
 
@@ -177,45 +181,84 @@ def fetch_headers(response: Response) -> Dict[str, str]:
     }
 
 
-def fetch_site_infos(urls: List[str]) -> Results:
+# def fetch_site_infos(urls: List[str]) -> Results:
+#     websites: List[Dict[str, Any]] = []
+#     existing_url: set[str] = set()
+#     # If url already analyzed then skip
+#     for url in tqdm(urls, desc="Fetching urls headers", colour="green"):
+#         if url in existing_url:
+#             continue
+
+#         d: Dict[str, Any] = {"url": url}
+#         try:
+#             # Délai d'attente de 10 secondes
+#             response: Response = requests.get(str(url), timeout=10)
+#             response.raise_for_status()
+
+#             headers: Dict[str, str] = fetch_headers(response)
+#             existing_url.add(url)
+#             d |= {
+#                 "server": headers["server"],
+#                 "x_frame_options": headers["x_frame_options"],
+#                 "x_content_type_options": headers["x_content_type_options"],
+#                 "referrer_policy": headers["referrer_policy"],
+#                 "xss_protection": headers["xss_protection"],
+#                 "response": response,
+#                 "err_code": None,
+#             }
+
+#         except Timeout:
+#             d["err_code"] = ErrorCode.TIMEOUT
+#             existing_url.add(url)
+
+#         except ConnectionError:
+#             d["err_code"] = ErrorCode.CONNECTION_ERROR
+#             existing_url.add(url)
+
+#         except HTTPError:
+#             d["err_code"] = ErrorCode.HTTP_ERROR
+#             existing_url.add(url)
+
+#         finally:
+#             websites.append(d)
+#     results = Results.model_validate({"site_infos": websites})
+#     return results
+
+def parralelize_fetching(urls: List[str]) -> Results:
     websites: List[Dict[str, Any]] = []
-    existing_url: set[str] = set()
-    # If url already analyzed then skip
-    for url in tqdm(urls, desc="Fetching urls headers", colour="green"):
-        if url in existing_url:
-            continue
-
-        d: Dict[str, Any] = {"url": url}
-        try:
-            # Délai d'attente de 10 secondes
-            response: Response = requests.get(str(url), timeout=10)
-            response.raise_for_status()
-
-            headers: Dict[str, str] = fetch_headers(response)
-            existing_url.add(url)
-            d |= {
-                "server": headers["server"],
-                "x_frame_options": headers["x_frame_options"],
-                "x_content_type_options": headers["x_content_type_options"],
-                "referrer_policy": headers["referrer_policy"],
-                "xss_protection": headers["xss_protection"],
-                "response": response,
-                "err_code": None,
-            }
-
-        except Timeout:
-            d["err_code"] = ErrorCode.TIMEOUT
-            existing_url.add(url)
-
-        except ConnectionError:
-            d["err_code"] = ErrorCode.CONNECTION_ERROR
-            existing_url.add(url)
-
-        except HTTPError:
-            d["err_code"] = ErrorCode.HTTP_ERROR
-            existing_url.add(url)
-
-        finally:
-            websites.append(d)
+    workers: int | None = os.cpu_count()
+    with multiprocessing.Pool(workers) as pool:
+        for site_info in tqdm(pool.imap_unordered(fetch_single_site_infos, urls), total=len(urls), desc="Getting sites infos", colour="green"):
+            websites.append(site_info)
     results = Results.model_validate({"site_infos": websites})
     return results
+
+
+def fetch_single_site_infos(url: str) -> Dict[str, Any]:
+    d: Dict[str, Any] = {"url": url}
+    try:
+        # Délai d'attente de 10 secondes
+        response: Response = requests.get(str(url), timeout=10)
+        response.raise_for_status()
+
+        headers: Dict[str, str] = fetch_headers(response)
+        d |= {
+            "server": headers["server"],
+            "x_frame_options": headers["x_frame_options"],
+            "x_content_type_options": headers["x_content_type_options"],
+            "referrer_policy": headers["referrer_policy"],
+            "xss_protection": headers["xss_protection"],
+            "response": response,
+            "err_code": None,
+        }
+
+    except Timeout:
+        d["err_code"] = ErrorCode.TIMEOUT
+
+    except ConnectionError:
+        d["err_code"] = ErrorCode.CONNECTION_ERROR
+
+    except HTTPError:
+        d["err_code"] = ErrorCode.HTTP_ERROR
+
+    return d

@@ -2,7 +2,7 @@ from pathlib import Path
 from pydantic import BaseModel
 import tyro
 from .nyfitsa import Results
-from .nyfitsa import fetch_site_infos
+from .nyfitsa import parralelize_fetching
 
 
 class NyfitsaConfig(BaseModel):
@@ -39,6 +39,6 @@ def main():
             # Put each url / line in a list
             for line in file:
                 config.urls.append(line.strip())
-    stats: Results = fetch_site_infos(config.urls)
+    stats: Results = parralelize_fetching(config.urls)
     if config.server_stats:
         stats.print_stats("server")
