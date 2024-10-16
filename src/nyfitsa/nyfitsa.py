@@ -181,7 +181,7 @@ def fetch_site_infos(urls: List[str]) -> Results:
     websites: List[Dict[str, Any]] = []
     existing_url: set[str] = set()
     # If url already analyzed then skip
-    for url in tqdm(urls):
+    for url in tqdm(urls, desc="Fetching urls headers", colour="green"):
         if url in existing_url:
             continue
 
