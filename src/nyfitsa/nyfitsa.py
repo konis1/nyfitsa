@@ -17,23 +17,29 @@ class ErrorCode(Enum):
     HTTP_ERROR = "http_error"
 
 
-"""
-
-Represents the different information we get from a website/
-
-Attributes:
-url(str):The website's url
-server(str): The server name
-x_frame_options(str): The content of x_frame_options header
-referrer_policy(str): The content of referrer policy header
-xss_protection(str): The content of xss_protection header
-err_vode(ErrorCode | None): The Error code if there is one
-_response(Response): The response we get for the url
-
-"""
-
-
 class SiteInfos(BaseModel):
+    """
+        Represents the different information obtained from a website.
+
+        Attributes
+        ----------
+        url : str
+            The website's URL.
+        server : Optional[str]
+            The server name.
+        x_frame_options : Optional[str]
+            The content of the X-Frame-Options header.
+        x_content_type_options : Optional[str]
+            The content of the X-Content-Type-Options header.
+        referrer_policy : Optional[str]
+            The content of the Referrer-Policy header.
+        xss_protection : Optional[str]
+            The content of the X-XSS-Protection header.
+        err_code : Optional[ErrorCode]
+            The error code if there was an issue retrieving the website.
+        _response : Optional[Response]
+            The response object obtained for the URL.
+    """
     url: str
     server: str | None = None
     x_frame_options: str | None = None
@@ -58,49 +64,44 @@ StatType = Literal[
 ]
 
 
-"""
-
-A class for calculating and printing statistics for various
-HTTP headers obtained from a list of SiteInfos objects.
-
-ttributes
-----------
-site_infos : List[SiteInfos]
-    A list of `SiteInfos` objects, each representing information
-    about a specific website, including headers and response status.
-
-Methods
--------
-stats_server() -> Dict[str, float]
-    Calculates the percentage distribution of different
-    server types among the websites.
-
-stats_xss_protection() -> Dict[str, float]
-    Calculates the percentage distribution of the
-    'X-XSS-Protection' header among the websites.
-
-stats_x_frames_options() -> Dict[str, float]
-    Calculates the percentage distribution of the
-    'X-Frame-Options' header among the websites.
-
-stats_x_content_type_options() -> Dict[str, float]
-    Calculates the percentage distribution of the
-    'X-Content-Type-Options' header among the websites.
-
-stats_referrer_policy() -> Dict[str, float]
-    Calculates the percentage distribution of the
-    'Referrer-Policy' header among the websites.
-
-print_stats(
-    stat_type: Literal["server", "xss_protection"] | None = None
-    ) -> None
-    Prints the statistics for the specified header type, if available.
-
-
-"""
-
-
 class Results(BaseModel):
+    """
+    A class for calculating and printing statistics for various
+    HTTP headers obtained from a list of SiteInfos objects.
+
+    ttributes
+    ----------
+    site_infos : List[SiteInfos]
+        A list of `SiteInfos` objects, each representing information
+        about a specific website, including headers and response status.
+
+    Methods
+    -------
+    stats_server() -> Dict[str, float]
+        Calculates the percentage distribution of different
+        server types among the websites.
+
+    stats_xss_protection() -> Dict[str, float]
+        Calculates the percentage distribution of the
+        'X-XSS-Protection' header among the websites.
+
+    stats_x_frames_options() -> Dict[str, float]
+        Calculates the percentage distribution of the
+        'X-Frame-Options' header among the websites.
+
+    stats_x_content_type_options() -> Dict[str, float]
+        Calculates the percentage distribution of the
+        'X-Content-Type-Options' header among the websites.
+
+    stats_referrer_policy() -> Dict[str, float]
+        Calculates the percentage distribution of the
+        'Referrer-Policy' header among the websites.
+
+    print_stats(
+        stat_type: Literal["server", "xss_protection"] | None = None
+        ) -> None
+        Prints the statistics for the specified header type, if available.
+    """
     site_infos: List[SiteInfos]
 
     def _calculate_stats(self, header: str) -> Dict[str, float]:
@@ -145,9 +146,9 @@ class Results(BaseModel):
         return self._calculate_stats("referrer_policy")
 
     def print_stats(
-        self,
-        stat_type: StatType | None = None
-    ) -> None:
+            self,
+            stat_type: StatType | None = None
+            ) -> None:
         stats: Dict[str, float] | None = None
 
         # Appeler la méthode en fonction du type de statistique demandé
@@ -228,7 +229,7 @@ def fetch_headers(response: Response) -> Dict[str, str]:
 
 def parralelize_fetching(urls: List[str]) -> Results:
     websites: List[Dict[str, Any]] = []
-    workers: int | None = os.cpu_count()
+    workers: int | None = min(os.cpu_count() or 1, 8)
 
     with multiprocessing.Pool(workers) as pool:
         for site_info in tqdm(
