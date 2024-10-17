@@ -73,3 +73,7 @@ The following configuration options are defined in the `NyfitsaConfig` class:
 2. **URL Fetching**: The list of URLs is fetched either from the command line directly or from a text file if provided.
 3. **Parallel Fetching**: The function `parralelize_fetching` is used to fetch the headers of the URLs in parallel for better performance.
 4. **Statistics Calculation**: Based on the selected options, statistics for different headers are calculated and printed.
+
+## License
+
+This project is licensed under the MIT License.
