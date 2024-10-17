@@ -73,3 +73,11 @@ def main():
     stats: Results = parralelize_fetching(config.urls)
     if config.stats_server:
         stats.print_stats("server")
+    if config.stats_x_content_type_options:
+        stats.print_stats("x_content_type_options")
+    if config.stats_x_frame_options:
+        stats.print_stats("x_frame_options")
+    if config.stats_xss_protection:
+        stats.print_stats("xss_protection")
+    if config.stats_referrer_policy:
+        stats.print_stats("referrer_policy")
