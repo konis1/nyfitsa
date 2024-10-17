@@ -1,13 +1,14 @@
+from collections import defaultdict
 from enum import Enum
+from typing import Dict, List, Any, Literal
+import os
+
 from pydantic import BaseModel
+import multiprocessing
+import requests
 from requests import Response, structures
 from requests.exceptions import Timeout, ConnectionError, HTTPError
-from typing import Dict, List, Any, Literal
-from collections import defaultdict
-import requests
 from tqdm import tqdm
-import multiprocessing
-import os
 
 
 class ErrorCode(Enum):
