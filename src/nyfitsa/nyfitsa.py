@@ -149,6 +149,7 @@ class Results(BaseModel):
         stat_type: StatType | None = None
     ) -> None:
         stats: Dict[str, float] | None = None
+
         # Appeler la méthode en fonction du type de statistique demandé
         if stat_type == "server":
             stats = self.stats_server()
@@ -228,15 +229,17 @@ def fetch_headers(response: Response) -> Dict[str, str]:
 def parralelize_fetching(urls: List[str]) -> Results:
     websites: List[Dict[str, Any]] = []
     workers: int | None = os.cpu_count()
+
     with multiprocessing.Pool(workers) as pool:
-        for site_info in tqdm(pool.imap_unordered
-                              (fetch_single_site_infos,
-                               urls
-                               ),
-                              total=len(urls),
-                              desc="Getting sites infos",
-                              colour="green"
-                              ):
+        for site_info in tqdm(
+            pool.imap_unordered(
+                fetch_single_site_infos,
+                urls
+                ),
+            total=len(urls),
+            desc="Getting sites infos",
+            colour="green"
+        ):
             websites.append(site_info)
     results = Results.model_validate({"site_infos": websites})
     return results
