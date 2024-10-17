@@ -15,10 +15,41 @@ class NyfitsaConfig(BaseModel):
 
     """
 
-    server_stats: bool = False
+    stats_server: bool = False
     """
 
     Activate this option to calculate the server stats from the urls list
+
+    """
+
+    stats_xss_protection: bool = False
+    """
+
+    Activate this option to calculate the xss_protection stats from the
+    urls list
+
+    """
+
+    stats_x_frame_options: bool = False
+    """
+
+    Activate this option to calculate the x_frame_options stats from the
+    urls list
+
+    """
+    stats_x_content_type_options: bool = False
+    """
+
+    Activate this option to calculate the x_content_type_options stats from the
+    urls list
+
+    """
+
+    stats_referrer_policy: bool = False
+    """
+
+    Activate this option to calculate the referrer policystats from the
+    urls list
 
     """
 
@@ -40,5 +71,5 @@ def main():
             for line in file:
                 config.urls.append(line.strip())
     stats: Results = parralelize_fetching(config.urls)
-    if config.server_stats:
+    if config.stats_server:
         stats.print_stats("server")
