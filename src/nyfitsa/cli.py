@@ -1,8 +1,7 @@
 from pathlib import Path
 from pydantic import BaseModel
 import tyro
-from .nyfitsa import Results
-from .nyfitsa import parralelize_fetching
+from .nyfitsa import Results, parralelize_fetching
 
 
 class NyfitsaConfig(BaseModel):
