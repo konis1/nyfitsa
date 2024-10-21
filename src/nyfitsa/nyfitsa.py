@@ -179,6 +179,10 @@ class Results(BaseModel):
         else:
             print("No statistic type was provided.")
 
+    def export_stats_to_json(self, filename: str = "stats.json"):
+        with open(filename, 'w') as f:
+            f.write(self.model_dump_json())
+
 
 def fetch_headers(response: Response) -> Dict[str, str]:
     headers: structures.CaseInsensitiveDict[str] = response.headers
