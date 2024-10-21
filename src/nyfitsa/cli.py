@@ -55,7 +55,7 @@ class NyfitsaConfig(BaseModel):
     file: Path | None = None
     """
 
-    urls in a txt file. 1 url by line
+    urls in a txt file. 1 url per line
 
     """
 
