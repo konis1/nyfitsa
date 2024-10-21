@@ -163,13 +163,21 @@ class Results(BaseModel):
         elif stat_type == "referrer_policy":
             stats = self.stats_referrer_policy()
 
-        # Vérifie si des statistiques existent et les imprime
-        if isinstance(stats, dict):
-            print(f"{stat_type} stats:")
-            for key, percentage in stats.items():
-                print(f"- {key}: {percentage}%")
+        if stat_type:
+            # Vérifie si des statistiques existent et les imprime
+            if isinstance(stats, dict):
+                print("\n" + "="*50)
+                print(f"Statistics for: {stat_type.replace('_', ' ').title()}")
+                print("="*50)
+                for key, percentage in stats.items():
+                    print(f"- {key}: {percentage:.2f}%")
+                print("="*50 + "\n")
+            else:
+                print("\n" + "="*50)
+                print(f"No statistics available for:{stat_type.replace('_', ' ').title()}")
+                print("="*50 + "\n")
         else:
-            print("No stats available")
+            print("No statistic type was provided.")
 
 
 def fetch_headers(response: Response) -> Dict[str, str]:
@@ -183,49 +191,6 @@ def fetch_headers(response: Response) -> Dict[str, str]:
         "xss_protection": headers.get("X-XSS-Protection", "unavailable"),
     }
 
-
-# def fetch_site_infos(urls: List[str]) -> Results:
-#     websites: List[Dict[str, Any]] = []
-#     existing_url: set[str] = set()
-#     # If url already analyzed then skip
-#     for url in tqdm(urls, desc="Fetching urls headers", colour="green"):
-#         if url in existing_url:
-#             continue
-
-#         d: Dict[str, Any] = {"url": url}
-#         try:
-#             # Délai d'attente de 10 secondes
-#             response: Response = requests.get(str(url), timeout=10)
-#             response.raise_for_status()
-
-#             headers: Dict[str, str] = fetch_headers(response)
-#             existing_url.add(url)
-#             d |= {
-#                 "server": headers["server"],
-#                 "x_frame_options": headers["x_frame_options"],
-#                 "x_content_type_options": headers["x_content_type_options"],
-#                 "referrer_policy": headers["referrer_policy"],
-#                 "xss_protection": headers["xss_protection"],
-#                 "response": response,
-#                 "err_code": None,
-#             }
-
-#         except Timeout:
-#             d["err_code"] = ErrorCode.TIMEOUT
-#             existing_url.add(url)
-
-#         except ConnectionError:
-#             d["err_code"] = ErrorCode.CONNECTION_ERROR
-#             existing_url.add(url)
-
-#         except HTTPError:
-#             d["err_code"] = ErrorCode.HTTP_ERROR
-#             existing_url.add(url)
-
-#         finally:
-#             websites.append(d)
-#     results = Results.model_validate({"site_infos": websites})
-#     return results
 
 def parralelize_fetching(urls: List[str]) -> Results:
     websites: List[Dict[str, Any]] = []
@@ -274,3 +239,46 @@ def fetch_single_site_infos(url: str) -> Dict[str, Any]:
         d["err_code"] = ErrorCode.HTTP_ERROR
 
     return d
+
+# def fetch_site_infos(urls: List[str]) -> Results:
+#     websites: List[Dict[str, Any]] = []
+#     existing_url: set[str] = set()
+#     # If url already analyzed then skip
+#     for url in tqdm(urls, desc="Fetching urls headers", colour="green"):
+#         if url in existing_url:
+#             continue
+
+#         d: Dict[str, Any] = {"url": url}
+#         try:
+#             # Délai d'attente de 10 secondes
+#             response: Response = requests.get(str(url), timeout=10)
+#             response.raise_for_status()
+
+#             headers: Dict[str, str] = fetch_headers(response)
+#             existing_url.add(url)
+#             d |= {
+#                 "server": headers["server"],
+#                 "x_frame_options": headers["x_frame_options"],
+#                 "x_content_type_options": headers["x_content_type_options"],
+#                 "referrer_policy": headers["referrer_policy"],
+#                 "xss_protection": headers["xss_protection"],
+#                 "response": response,
+#                 "err_code": None,
+#             }
+
+#         except Timeout:
+#             d["err_code"] = ErrorCode.TIMEOUT
+#             existing_url.add(url)
+
+#         except ConnectionError:
+#             d["err_code"] = ErrorCode.CONNECTION_ERROR
+#             existing_url.add(url)
+
+#         except HTTPError:
+#             d["err_code"] = ErrorCode.HTTP_ERROR
+#             existing_url.add(url)
+
+#         finally:
+#             websites.append(d)
+#     results = Results.model_validate({"site_infos": websites})
+#     return results
