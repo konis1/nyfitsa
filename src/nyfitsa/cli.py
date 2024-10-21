@@ -1,5 +1,6 @@
 from pathlib import Path
 from pydantic import BaseModel
+from typing import Literal
 import tyro
 from .nyfitsa import Results, parralelize_fetching
 
@@ -59,6 +60,8 @@ class NyfitsaConfig(BaseModel):
 
     """
 
+    output: Literal["cli", "json"] = "cli"
+
 
 def main():
     config = tyro.cli(NyfitsaConfig)
@@ -70,13 +73,16 @@ def main():
             for line in file:
                 config.urls.append(line.strip())
     stats: Results = parralelize_fetching(config.urls)
-    if config.stats_server:
-        stats.print_stats("server")
-    if config.stats_x_content_type_options:
-        stats.print_stats("x_content_type_options")
-    if config.stats_x_frame_options:
-        stats.print_stats("x_frame_options")
-    if config.stats_xss_protection:
-        stats.print_stats("xss_protection")
-    if config.stats_referrer_policy:
-        stats.print_stats("referrer_policy")
+    if config.output == "cli":
+        if config.stats_server:
+            stats.print_stats("server")
+        if config.stats_x_content_type_options:
+            stats.print_stats("x_content_type_options")
+        if config.stats_x_frame_options:
+            stats.print_stats("x_frame_options")
+        if config.stats_xss_protection:
+            stats.print_stats("xss_protection")
+        if config.stats_referrer_policy:
+            stats.print_stats("referrer_policy")
+    if config.output == "json":
+        stats.export_stats_to_json()
