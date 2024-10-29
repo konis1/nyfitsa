@@ -19,3 +19,6 @@ dev-dependencies = [
     "coverage>=7.6.4",
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]   
+
