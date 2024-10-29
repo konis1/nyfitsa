@@ -1,9 +1,12 @@
 
 from typing import Dict
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+import pytest
 
 from src.nyfitsa.nyfitsa import fetch_headers
 from src.nyfitsa.nyfitsa import SiteInfos, Results, ErrorCode
+
+import requests
 
 
 class Test_FetchHeaders():
@@ -53,9 +56,7 @@ class Test_FetchHeaders():
 
     def test_fetch_headers_none_present(self):
         mock_response = MagicMock()
-        mock_response.headers = {
-
-        }
+        mock_response.headers = {}
 
         expected_results: Dict[str, str] = {
             "server": "unavailable",
@@ -117,47 +118,91 @@ class TestResults():
         assert results.stats_referrer_policy() == {"test": 100.0}
         assert results.stats_xss_protection() == {"test": 100.0}
 
-    def test_calculate_stats_timeout_error(self):
-        mock_response = MagicMock()
-        mock_response.headers = {
-            "Server": None,
-            "X-Frame-Options": None,
-            "X-Content-Type-Options": None,
-            "Referrer-Policy": None,
-            "X-XSS-Protection": None,
-            "err_code": "timeout"
+    def test_calculate_stats_xss_protection(self):
+
+        expected_results: Dict[str, float] = {
+            "test": 100.0,
         }
 
-        google_site_infos = SiteInfos(
-            url="http://www.google.com",
-            server=None,
-            x_frame_options=None,
-            x_content_type_options=None,
-            referrer_policy=None,
-            xss_protection=None,
-            err_code=ErrorCode.TIMEOUT,
-            _response=mock_response,
-        )
+        results: Results = Results(site_infos=[
+            self.google_site_infos,
+            self.wikipedia_site_infos
+            ])
+        assert results.stats_xss_protection() == expected_results
 
-        wikipedia_site_infos = SiteInfos(
-            url="http://www.wikipedia.com",
-            server=None,
-            x_frame_options=None,
-            x_content_type_options=None,
-            referrer_policy=None,
-            xss_protection=None,
-            err_code=ErrorCode.TIMEOUT,
-            _response=mock_response,
-        )
+
+class TestResultsErrors():
+    mock_response = MagicMock()
+    mock_response.headers = {
+        "Server": None,
+        "X-Frame-Options": None,
+        "X-Content-Type-Options": None,
+        "Referrer-Policy": None,
+        "X-XSS-Protection": None,
+        "err_code": "timeout"
+    }
+
+    google_site_infos = SiteInfos(
+        url="http://www.google.com",
+        _response=mock_response,
+    )
+
+    wikipedia_site_infos = SiteInfos(
+        url="http://www.wikipedia.com",
+        _response=mock_response,
+    )
+
+    def test_calculate_stats_timeout_error(self):
+        self.google_site_infos.err_code = ErrorCode.TIMEOUT
+        self.wikipedia_site_infos.err_code = ErrorCode.TIMEOUT
 
         expected_results: Dict[str, float] = {
             "timeout": 100.0,
         }
 
         results: Results = Results(site_infos=[
-            google_site_infos,
-            wikipedia_site_infos
+            self.google_site_infos,
+            self.wikipedia_site_infos
             ])
+
+        assert results.stats_server() == expected_results
+        assert results.stats_x_frames_options() == expected_results
+        assert results.stats_x_content_type_options() == expected_results
+        assert results.stats_referrer_policy() == expected_results
+        assert results.stats_xss_protection() == expected_results
+
+    def test_calculate_stats_connection_error(self):
+        self.google_site_infos.err_code = ErrorCode.CONNECTION_ERROR
+        self.wikipedia_site_infos.err_code = ErrorCode.CONNECTION_ERROR
+
+        expected_results: Dict[str, float] = {
+            "connection_error": 100.0,
+        }
+
+        results: Results = Results(site_infos=[
+            self.google_site_infos,
+            self.wikipedia_site_infos
+            ])
+
+        assert results.stats_server() == expected_results
+        assert results.stats_x_frames_options() == expected_results
+        assert results.stats_x_content_type_options() == expected_results
+        assert results.stats_referrer_policy() == expected_results
+        assert results.stats_xss_protection() == expected_results
+
+    def test_calculate_stats_http_error(self):
+        self.google_site_infos.err_code = ErrorCode.HTTP_ERROR
+        self.wikipedia_site_infos.err_code = ErrorCode.HTTP_ERROR
+
+        expected_results: Dict[str, float] = {
+            "http_error": 100.0,
+        }
+
+        results: Results = Results(site_infos=[
+            self.google_site_infos,
+            self.wikipedia_site_infos
+            ])
+
         assert results.stats_server() == expected_results
         assert results.stats_x_frames_options() == expected_results
         assert results.stats_x_content_type_options() == expected_results
@@ -165,63 +210,27 @@ class TestResults():
         assert results.stats_xss_protection() == expected_results
 
 
-# def test_stats_server_valid():
-#     urls: List[str] = ["http://www.google.com", "https://www.wikipedia.com"]
-#     with patch('requests.get') as mock_get:
-#         # Simuler une réponse avec un code 200 et un en-tête de serveur
-#         mock_response = MagicMock()
-#         mock_response.status_code = 200
-#         mock_response.headers = {"server": "nginx"}
-#         mock_get.return_value = mock_response
+class TestFetchSingleSiteInfos():
+    @patch("requests.get")
+    def test_fetch_single_site_infos_response_ok(self, mock_get: MagicMock):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.headers = {"Server": "nginx"}
+        mock_response.content = b"Success content"
+        mock_get.return_value = mock_response
 
-#         stats: Results = parralelize_fetching(urls)
+        response = requests.get("http://www.google.com", timeout=10)
 
-#         result: Dict[str, float] = stats.stats_server()
-#         assert result == {"nginx": 100}
+        assert response.status_code == 200
+        assert response.headers["Server"] == "nginx"
+        assert response.content == b"Success content"
 
-# Test Parralelize_fetching
-# Test fetch single site info
-#  Test fetch_site_site_info_Errors
-
-# def test_stats_server_valid_timeout():
-#     urls: List[str] = ["http://www.google.com", "https://www.wikipedia.com"]
-#     with patch('requests.get', side_effect=requests.exceptions.Timeout):
-#         stats: Results = parralelize_fetching(urls)
-#         result: Dict[str, float] = stats.stats_server()
-
-#         assert result == {"timeout": 100}
-
-
-# def test_stats_server_valid_connection_error():
-#     urls: List[str] = ["http://www.google.com", "https://www.wikipedia.com"]
-#     with patch('requests.get',
-#                side_effect=requests.exceptions.ConnectionError
-#                ):
-#         stats: Results = parralelize_fetching(urls)
-#         result: Dict[str, float] = stats.stats_server()
-
-#         assert result == {"connection_error": 100}
-
-
-# def test_stats_server_valid_http_error():
-#     urls: List[str] = ["http://www.google.com", "https://www.wikipedia.com"]
-#     with patch('requests.get', side_effect=requests.exceptions.HTTPError):
-#         stats: Results = parralelize_fetching(urls)
-#         result: Dict[str, float] = stats.stats_server()
-
-#         assert result == {"http_error": 100}
-
-
-# def test_stats_server_empty_list():
-#     urls: List[str] = []
-#     with patch('requests.get') as mock_get:
-#         # Simuler une réponse avec un code 200 et un en-tête de serveur
-#         mock_response = MagicMock()
-#         mock_response.status_code = 200
-#         mock_response.headers = {}
-#         mock_get.return_value = mock_response
-
-#         stats: Results = parralelize_fetching(urls)
-
-#         result: Dict[str, float] = stats.stats_server()
-#         assert result == {}
+    @patch("requests.get")
+    def test_fetch_single_site_infos_response_timeout(
+            self,
+            mock_get: MagicMock
+            ):
+        mock_get.side_effect = requests.exceptions.Timeout
+        # TImeoutException expected
+        with pytest.raises(requests.exceptions.Timeout):
+            requests.get("http://www.google.com", timeout=10)
