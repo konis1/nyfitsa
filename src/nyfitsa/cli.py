@@ -81,4 +81,4 @@ def main():
     if config.stats_referrer_policy:
         stats.print_stats("referrer_policy")
 
-    stats.export_stats_to_json()
+    stats.to_json()

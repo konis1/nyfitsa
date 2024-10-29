@@ -1,8 +1,7 @@
 [project]
 name = "nyfitsa"
 version = "0.1.0"
-description = "`Nyfitsa` is a Python-based command-line tool designed to fetch header data from a list of URLs and calculate statistics based on specific HTTP headers such as server information, XSS protection, X-Frame options, content type options, and referrer policy. The tool supports fetching URLs both from a list provided via the command line and from a text file.
-"
+description = "`Nyfitsa` is a Python-based command-line tool designed to fetch header data from a list of URLs and calculate statistics based on specific HTTP headers such as server information, XSS protection, X-Frame options, content type options, and referrer policy. The tool supports fetching URLs both from a list provided via the command line and from a text file."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -17,5 +16,6 @@ dev-dependencies = [
     "pytest>=8.3.3",
     "uv>=0.4.22",
     "black>=24.10.0",
+    "coverage>=7.6.4",
 ]
 

@@ -179,7 +179,7 @@ class Results(BaseModel):
         else:
             print("No statistic type was provided.")
 
-    def export_stats_to_json(self, filename: str = "stats.json"):
+    def to_json(self, filename: str = "stats.json"):
         with open(filename, 'w') as f:
             f.write(self.model_dump_json())
 
