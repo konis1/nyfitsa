@@ -1,9 +1,9 @@
 
-from typing import Dict
+from typing import Dict, Any
 from unittest.mock import MagicMock, patch
 import pytest
 
-from src.nyfitsa.nyfitsa import fetch_headers
+from src.nyfitsa.nyfitsa import fetch_headers, fetch_single_site_infos
 from src.nyfitsa.nyfitsa import SiteInfos, Results, ErrorCode
 
 import requests
@@ -117,18 +117,20 @@ class TestResults():
         assert results.stats_x_content_type_options() == {"test": 100.0}
         assert results.stats_referrer_policy() == {"test": 100.0}
         assert results.stats_xss_protection() == {"test": 100.0}
-
-    def test_calculate_stats_xss_protection(self):
+    
+    def test_calculate_stats_unavailable(self):
 
         expected_results: Dict[str, float] = {
-            "test": 100.0,
+            "unavailable": 100.0,
         }
 
+        self.google_site_infos.server = None
+        self.wikipedia_site_infos.server = None
         results: Results = Results(site_infos=[
             self.google_site_infos,
             self.wikipedia_site_infos
             ])
-        assert results.stats_xss_protection() == expected_results
+        assert results.stats_server() == expected_results
 
 
 class TestResultsErrors():
@@ -211,6 +213,8 @@ class TestResultsErrors():
 
 
 class TestFetchSingleSiteInfos():
+    url: str = "http://www.google.com"
+
     @patch("requests.get")
     def test_fetch_single_site_infos_response_ok(self, mock_get: MagicMock):
         mock_response = MagicMock()
@@ -219,18 +223,77 @@ class TestFetchSingleSiteInfos():
         mock_response.content = b"Success content"
         mock_get.return_value = mock_response
 
-        response = requests.get("http://www.google.com", timeout=10)
+        response = requests.get(self.url, timeout=10)
 
         assert response.status_code == 200
         assert response.headers["Server"] == "nginx"
         assert response.content == b"Success content"
 
     @patch("requests.get")
-    def test_fetch_single_site_infos_response_timeout(
+    def test_fetch_single_site_infos_timeout(
             self,
             mock_get: MagicMock
             ):
         mock_get.side_effect = requests.exceptions.Timeout
         # TImeoutException expected
-        with pytest.raises(requests.exceptions.Timeout):
-            requests.get("http://www.google.com", timeout=10)
+        result = fetch_single_site_infos(self.url)
+        expected_result: Dict[str, Any] = {
+            "url": self.url,
+            "err_code": ErrorCode.TIMEOUT
+        }
+        assert result == expected_result
+
+    @patch("requests.get")
+    def test_fetch_single_site_infos_connection_error(
+            self,
+            mock_get: MagicMock
+            ):
+        mock_get.side_effect = requests.exceptions.ConnectionError
+        # TImeoutException expected
+        result = fetch_single_site_infos(self.url)
+        expected_result: Dict[str, Any] = {
+            "url": self.url,
+            "err_code": ErrorCode.CONNECTION_ERROR
+        }
+        assert result == expected_result
+
+    @patch("requests.get")
+    def test_fetch_single_site_infos_http_error(
+            self,
+            mock_get: MagicMock
+            ):
+        mock_get.side_effect = requests.exceptions.HTTPError
+        # TImeoutException expected
+        result = fetch_single_site_infos(self.url)
+        expected_result: Dict[str, Any] = {
+            "url": self.url,
+            "err_code": ErrorCode.HTTP_ERROR
+        }
+        assert result == expected_result
+
+    @patch("requests.get")
+    def test_fetch_single_site_infos_valid(self, mock_get: MagicMock):
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.headers = {
+            "server": "nginx",
+            "X-Frame-Options": "test",
+            "X-Content-Type-Options": "test",
+            "Referrer-Policy": "test",
+            "X-XSS-Protection": "test"
+        }
+        mock_get.return_value = mock_response
+
+        expected_result: Dict[str, Any] = {
+            "url": self.url,
+            "server": "nginx",
+            "x_frame_options": "test",
+            "x_content_type_options": "test",
+            "referrer_policy": "test",
+            "xss_protection": "test",
+            "response": mock_response,
+            "err_code": None
+        }
+
+        result = fetch_single_site_infos(self.url)
+        assert expected_result == result
