@@ -2,7 +2,11 @@
 from typing import Dict, Any
 from unittest.mock import MagicMock, patch
 
-from src.nyfitsa.nyfitsa import fetch_headers, fetch_single_site_infos, get_server_version_number
+from src.nyfitsa.nyfitsa import (
+    fetch_headers,
+    fetch_single_site_infos,
+    get_server_version_number
+)
 from src.nyfitsa.nyfitsa import SiteInfos, Results, ErrorCode
 
 import requests
@@ -324,11 +328,7 @@ class TestPrintStats():
     )
 
     def expected_print(self, stat_type: str, expected_out_value: str) -> str:
-        return f"\n==================================================\n\
-            Statistics for: {stat_type}\
-            \n==================================================\n\
-            - {expected_out_value}\
-                \n==================================================\n\n"
+        return f"\n==================================================\nStatistics for: {stat_type}\n==================================================\n- {expected_out_value}\n==================================================\n\n"
 
     def test_print_stats_server(self, capsys: CaptureFixture[str]):
         results: Results = Results(site_infos=[
@@ -409,10 +409,7 @@ class TestPrintStats():
     def test_print_no_stats_available(self, capsys: CaptureFixture[str]):
         self.google_site_infos.referrer_policy = None
         results: Results = Results(site_infos=[self.google_site_infos])
-        expected_print: str = \
-            "\n==================================================\n\
-                No statistics available for: Referrer Polic\
-                \n==================================================\n\n"
+        expected_print: str = "\n==================================================\nNo statistics available for: Referrer Polic\n==================================================\n\n"
 
         results.print_stats("referrer_polic")  # type: ignore
 
@@ -429,6 +426,7 @@ class TestPrintStats():
         printed: tuple[str, str] = capsys.readouterr()
 
         assert printed.out == expected_print
+
 
 def test_get_server_version_number():
     result = get_server_version_number("Apache/2.4.52 (Ubuntu)")
