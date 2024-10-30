@@ -399,3 +399,13 @@ class TestPrintStats():
         printed: tuple[str, str] = capsys.readouterr()
 
         assert printed.out == expected_print
+
+    def test_print_no_statistics_type(self, capsys: CaptureFixture[str]):
+        results: Results = Results(site_infos=[self.google_site_infos])
+        expected_print: str = "No statistic type was provided.\n"
+
+        results.print_stats(None)
+
+        printed: tuple[str, str] = capsys.readouterr()
+
+        assert printed.out == expected_print
