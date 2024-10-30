@@ -1,13 +1,13 @@
 
 from typing import Dict, Any
 from unittest.mock import MagicMock, patch
-import pytest
 
 from src.nyfitsa.nyfitsa import fetch_headers, fetch_single_site_infos
 from src.nyfitsa.nyfitsa import SiteInfos, Results, ErrorCode
 
 import requests
 
+from pytest import CaptureFixture
 
 class Test_FetchHeaders():
     def test_fetch_headers_all_present(self):
@@ -117,7 +117,7 @@ class TestResults():
         assert results.stats_x_content_type_options() == {"test": 100.0}
         assert results.stats_referrer_policy() == {"test": 100.0}
         assert results.stats_xss_protection() == {"test": 100.0}
-    
+
     def test_calculate_stats_unavailable(self):
 
         expected_results: Dict[str, float] = {
@@ -297,3 +297,39 @@ class TestFetchSingleSiteInfos():
 
         result = fetch_single_site_infos(self.url)
         assert expected_result == result
+
+
+class TestPrintStats():
+    mock_response = MagicMock()
+
+    google_site_infos = SiteInfos(
+        url="http://www.google.com",
+        server="nginx",
+        x_frame_options="test",
+        x_content_type_options="test",
+        referrer_policy="test",
+        xss_protection="test",
+        _response=mock_response,
+    )
+
+    wikipedia_site_infos = SiteInfos(
+        url="http://www.wikipedia.com",
+        server="nginx",
+        x_frame_options="test",
+        x_content_type_options="test",
+        referrer_policy="test",
+        xss_protection="test",
+        _response=mock_response,
+    )
+
+    def test_print_stats_server(self, capsys: CaptureFixture[str]):
+        results: Results = Results(site_infos=[
+            self.google_site_infos,
+            self.wikipedia_site_infos
+            ])
+        expected_print: str = "\n==================================================\nStatistics for: Server\n==================================================\n- nginx: 100.00%\n==================================================\n\n"
+        results.print_stats("server")
+
+        printed: tuple[str, str] = capsys.readouterr()
+
+        assert printed.out == expected_print
