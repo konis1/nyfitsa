@@ -433,3 +433,9 @@ def test_get_server_version_number():
     expected_result = "2.4.52"
 
     assert result == expected_result
+
+def test_get_server_version_number_no_version():
+    result = get_server_version_number("Apache")
+    expected_result = ""
+
+    assert result == expected_result
