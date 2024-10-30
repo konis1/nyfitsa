@@ -180,7 +180,8 @@ class Results(BaseModel):
             print("="*50 + "\n")
         else:
             print("\n" + "="*50)
-            print(f"No statistics available for: {stat_type.replace('_', ' ').title()}")
+            print(f"No statistics available for: \
+                {stat_type.replace('_', ' ').title()}")
             print("="*50 + "\n")
 
     def to_json(self, filename: str = "stats.json"):
@@ -247,3 +248,8 @@ def fetch_single_site_infos(url: str) -> Dict[str, Any]:
         d["err_code"] = ErrorCode.HTTP_ERROR
 
     return d
+
+
+def get_server_version_number(server_header: str):
+    version_number: List[str] = server_header.split("/")
+    return version_number

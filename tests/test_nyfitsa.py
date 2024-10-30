@@ -9,6 +9,7 @@ import requests
 
 from pytest import CaptureFixture
 
+
 class Test_FetchHeaders():
     def test_fetch_headers_all_present(self):
         mock_response = MagicMock()
@@ -323,7 +324,11 @@ class TestPrintStats():
     )
 
     def expected_print(self, stat_type: str, expected_out_value: str) -> str:
-        return f"\n==================================================\nStatistics for: {stat_type}\n==================================================\n- {expected_out_value}\n==================================================\n\n"
+        return f"\n==================================================\n\
+            Statistics for: {stat_type}\
+            \n==================================================\n\
+            - {expected_out_value}\
+                \n==================================================\n\n"
 
     def test_print_stats_server(self, capsys: CaptureFixture[str]):
         results: Results = Results(site_infos=[
@@ -342,7 +347,10 @@ class TestPrintStats():
             self.google_site_infos,
             self.wikipedia_site_infos
             ])
-        expected_print: str = self.expected_print("Xss Protection", "test: 100.00%")
+        expected_print: str = self.expected_print(
+            "Xss Protection",
+            "test: 100.00%"
+            )
 
         results.print_stats("xss_protection")
 
@@ -355,7 +363,10 @@ class TestPrintStats():
             self.google_site_infos,
             self.wikipedia_site_infos
             ])
-        expected_print: str = self.expected_print("X Frame Options", "test: 100.00%")
+        expected_print: str = self.expected_print(
+            "X Frame Options",
+            "test: 100.00%"
+            )
 
         results.print_stats("x_frame_options")
 
@@ -368,7 +379,10 @@ class TestPrintStats():
             self.google_site_infos,
             self.wikipedia_site_infos
             ])
-        expected_print: str = self.expected_print("X Content Type Options", "test: 100.00%")
+        expected_print: str = self.expected_print(
+            "X Content Type Options",
+            "test: 100.00%"
+            )
 
         results.print_stats("x_content_type_options")
 
@@ -381,7 +395,10 @@ class TestPrintStats():
             self.google_site_infos,
             self.wikipedia_site_infos
             ])
-        expected_print: str = self.expected_print("Referrer Policy", "test: 100.00%")
+        expected_print: str = self.expected_print(
+            "Referrer Policy",
+            "test: 100.00%"
+            )
 
         results.print_stats("referrer_policy")
 
@@ -392,9 +409,12 @@ class TestPrintStats():
     def test_print_no_stats_available(self, capsys: CaptureFixture[str]):
         self.google_site_infos.referrer_policy = None
         results: Results = Results(site_infos=[self.google_site_infos])
-        expected_print: str = "\n==================================================\nNo statistics available for: Referrer Polic\n==================================================\n\n"
+        expected_print: str = \
+            "\n==================================================\n\
+                No statistics available for: Referrer Polic\
+                \n==================================================\n\n"
 
-        results.print_stats("referrer_polic")
+        results.print_stats("referrer_polic")  # type: ignore
 
         printed: tuple[str, str] = capsys.readouterr()
 
@@ -409,3 +429,4 @@ class TestPrintStats():
         printed: tuple[str, str] = capsys.readouterr()
 
         assert printed.out == expected_print
+
