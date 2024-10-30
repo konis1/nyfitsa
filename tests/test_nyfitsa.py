@@ -2,7 +2,7 @@
 from typing import Dict, Any
 from unittest.mock import MagicMock, patch
 
-from src.nyfitsa.nyfitsa import fetch_headers, fetch_single_site_infos
+from src.nyfitsa.nyfitsa import fetch_headers, fetch_single_site_infos, get_server_version_number
 from src.nyfitsa.nyfitsa import SiteInfos, Results, ErrorCode
 
 import requests
@@ -430,3 +430,8 @@ class TestPrintStats():
 
         assert printed.out == expected_print
 
+def test_get_server_version_number():
+    result = get_server_version_number("Apache/2.4.52 (Ubuntu)")
+    expected_result = "2.4.52"
+
+    assert result == expected_result
