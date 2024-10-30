@@ -362,3 +362,29 @@ class TestPrintStats():
         printed: tuple[str, str] = capsys.readouterr()
 
         assert printed.out == expected_print
+
+    def test_print_x_content_type_options(self, capsys: CaptureFixture[str]):
+        results: Results = Results(site_infos=[
+            self.google_site_infos,
+            self.wikipedia_site_infos
+            ])
+        expected_print: str = self.expected_print("X Content Type Options", "test: 100.00%")
+
+        results.print_stats("x_content_type_options")
+
+        printed: tuple[str, str] = capsys.readouterr()
+
+        assert printed.out == expected_print
+
+    def test_print_referrer_policy(self, capsys: CaptureFixture[str]):
+        results: Results = Results(site_infos=[
+            self.google_site_infos,
+            self.wikipedia_site_infos
+            ])
+        expected_print: str = self.expected_print("Referrer Policy", "test: 100.00%")
+
+        results.print_stats("referrer_policy")
+
+        printed: tuple[str, str] = capsys.readouterr()
+
+        assert printed.out == expected_print
