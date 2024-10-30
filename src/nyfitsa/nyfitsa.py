@@ -151,6 +151,11 @@ class Results(BaseModel):
             ) -> None:
         stats: Dict[str, float] | None = None
 
+        # Handle case where no `stat_type` is provided
+        if not stat_type:
+            print("No statistic type was provided.")
+            return
+
         # Appeler la méthode en fonction du type de statistique demandé
         if stat_type == "server":
             stats = self.stats_server()
@@ -162,22 +167,21 @@ class Results(BaseModel):
             stats = self.stats_x_content_type_options()
         elif stat_type == "referrer_policy":
             stats = self.stats_referrer_policy()
-
-        if stat_type:
-            # Vérifie si des statistiques existent et les imprime
-            if isinstance(stats, dict):
-                print("\n" + "="*50)
-                print(f"Statistics for: {stat_type.replace('_', ' ').title()}")
-                print("="*50)
-                for key, percentage in stats.items():
-                    print(f"- {key}: {percentage:.2f}%")
-                print("="*50 + "\n")
-            else:
-                print("\n" + "="*50)
-                print(f"No statistics available for:{stat_type.replace('_', ' ').title()}")
-                print("="*50 + "\n")
         else:
-            print("No statistic type was provided.")
+            stats = None
+
+        # Vérifie si des statistiques existent et les imprime
+        if stats is not None:
+            print("\n" + "="*50)
+            print(f"Statistics for: {stat_type.replace('_', ' ').title()}")
+            print("="*50)
+            for key, percentage in stats.items():
+                print(f"- {key}: {percentage:.2f}%")
+            print("="*50 + "\n")
+        else:
+            print("\n" + "="*50)
+            print(f"No statistics available for: {stat_type.replace('_', ' ').title()}")
+            print("="*50 + "\n")
 
     def to_json(self, filename: str = "stats.json"):
         with open(filename, 'w') as f:

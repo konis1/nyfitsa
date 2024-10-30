@@ -388,3 +388,14 @@ class TestPrintStats():
         printed: tuple[str, str] = capsys.readouterr()
 
         assert printed.out == expected_print
+
+    def test_print_no_stats_available(self, capsys: CaptureFixture[str]):
+        self.google_site_infos.referrer_policy = None
+        results: Results = Results(site_infos=[self.google_site_infos])
+        expected_print: str = "\n==================================================\nNo statistics available for: Referrer Polic\n==================================================\n\n"
+
+        results.print_stats("referrer_polic")
+
+        printed: tuple[str, str] = capsys.readouterr()
+
+        assert printed.out == expected_print
