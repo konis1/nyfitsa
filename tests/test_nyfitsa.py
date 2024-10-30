@@ -349,3 +349,16 @@ class TestPrintStats():
         printed: tuple[str, str] = capsys.readouterr()
 
         assert printed.out == expected_print
+
+    def test_print_x_frame_options(self, capsys: CaptureFixture[str]):
+        results: Results = Results(site_infos=[
+            self.google_site_infos,
+            self.wikipedia_site_infos
+            ])
+        expected_print: str = self.expected_print("X Frame Options", "test: 100.00%")
+
+        results.print_stats("x_frame_options")
+
+        printed: tuple[str, str] = capsys.readouterr()
+
+        assert printed.out == expected_print
