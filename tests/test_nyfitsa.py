@@ -322,13 +322,29 @@ class TestPrintStats():
         _response=mock_response,
     )
 
+    def expected_print(self, stat_type: str, expected_out_value: str) -> str:
+        return f"\n==================================================\nStatistics for: {stat_type}\n==================================================\n- {expected_out_value}\n==================================================\n\n"
+
     def test_print_stats_server(self, capsys: CaptureFixture[str]):
         results: Results = Results(site_infos=[
             self.google_site_infos,
             self.wikipedia_site_infos
             ])
-        expected_print: str = "\n==================================================\nStatistics for: Server\n==================================================\n- nginx: 100.00%\n==================================================\n\n"
+        expected_print: str = self.expected_print("Server", "nginx: 100.00%")
         results.print_stats("server")
+
+        printed: tuple[str, str] = capsys.readouterr()
+
+        assert printed.out == expected_print
+
+    def test_print_xss_protection(self, capsys: CaptureFixture[str]):
+        results: Results = Results(site_infos=[
+            self.google_site_infos,
+            self.wikipedia_site_infos
+            ])
+        expected_print: str = self.expected_print("Xss Protection", "test: 100.00%")
+
+        results.print_stats("xss_protection")
 
         printed: tuple[str, str] = capsys.readouterr()
 
