@@ -252,7 +252,9 @@ def fetch_single_site_infos(url: str) -> Dict[str, Any]:
     return d
 
 
-def get_server_version_number(server_header: str):
+def get_server_version_number(server_header: str) -> str | None:
     version_number: List[str] = server_header.split("/")
-    version_number = version_number[-1].split(" ")
-    return version_number[0]
+    if len(version_number) > 1:
+        version_number = version_number[-1].split()
+        return version_number[0]
+    return None

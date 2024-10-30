@@ -434,8 +434,9 @@ def test_get_server_version_number():
 
     assert result == expected_result
 
+
 def test_get_server_version_number_no_version():
     result = get_server_version_number("Apache")
-    expected_result = ""
+    expected_result = None
 
     assert result == expected_result
