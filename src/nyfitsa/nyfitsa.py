@@ -42,6 +42,7 @@ class SiteInfos(BaseModel):
     """
     url: str
     server: str | None = None
+    server_version: str | None = None
     x_frame_options: str | None = None
     x_content_type_options: str | None = None
     referrer_policy: str | None = None
@@ -57,6 +58,7 @@ class SiteInfos(BaseModel):
 # Literal composed of the different headers
 StatType = Literal[
     "server",
+    "server_version",
     "x_frame_options",
     "x_content_type_options",
     "referrer_policy",
@@ -132,6 +134,9 @@ class Results(BaseModel):
 
     def stats_server(self) -> Dict[str, float]:
         return self._calculate_stats("server")
+    
+    def stats_server_version(self) -> Dict[str, float]:
+        return self._calculate_stats("server_version")
 
     def stats_xss_protection(self) -> Dict[str, float]:
         return self._calculate_stats("xss_protection")
@@ -159,6 +164,8 @@ class Results(BaseModel):
         # Appeler la méthode en fonction du type de statistique demandé
         if stat_type == "server":
             stats = self.stats_server()
+        elif stat_type == "server_version":
+            stats = self.stats_server_version()
         elif stat_type == "xss_protection":
             stats = self.stats_xss_protection()
         elif stat_type == "x_frame_options":
@@ -232,6 +239,7 @@ def fetch_single_site_infos(url: str) -> Dict[str, Any]:
         headers: Dict[str, str] = fetch_headers(response)
         d |= {
             "server": headers["server"],
+            "server_version": get_server_version_number(headers["server"]),
             "x_frame_options": headers["x_frame_options"],
             "x_content_type_options": headers["x_content_type_options"],
             "referrer_policy": headers["referrer_policy"],
@@ -257,4 +265,4 @@ def get_server_version_number(server_header: str) -> str | None:
     if len(version_number) > 1:
         version_number = version_number[-1].split()
         return version_number[0]
-    return None
+    return "No server version"

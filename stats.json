@@ -1,1 +1,1 @@
-{"site_infos":[{"url":"http://localhost/","server":"Apache/2.4.52 (Ubuntu)","x_frame_options":"unavailable","x_content_type_options":"unavailable","referrer_policy":"unavailable","xss_protection":"unavailable","err_code":null}]}
+{"site_infos":[{"url":"http://localhost","server":"Caddy","x_frame_options":"unavailable","x_content_type_options":"unavailable","referrer_policy":"unavailable","xss_protection":"unavailable","err_code":null}]}

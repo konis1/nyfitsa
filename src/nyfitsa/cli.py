@@ -21,6 +21,13 @@ class NyfitsaConfig(BaseModel):
 
     """
 
+    stats_server_version: bool = False
+    """
+
+    Activate this option to calculate the server_version stats from the urls list
+
+    """
+
     stats_xss_protection: bool = False
     """
 
