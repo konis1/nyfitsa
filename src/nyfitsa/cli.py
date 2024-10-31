@@ -79,6 +79,8 @@ def main():
     stats: Results = parralelize_fetching(config.urls)
     if config.stats_server:
         stats.print_stats("server")
+    if config.stats_server_version:
+        stats.print_stats("server_version")
     if config.stats_x_content_type_options:
         stats.print_stats("x_content_type_options")
     if config.stats_x_frame_options:

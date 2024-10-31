@@ -134,7 +134,7 @@ class Results(BaseModel):
 
     def stats_server(self) -> Dict[str, float]:
         return self._calculate_stats("server")
-    
+
     def stats_server_version(self) -> Dict[str, float]:
         return self._calculate_stats("server_version")
 
