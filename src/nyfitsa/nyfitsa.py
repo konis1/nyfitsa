@@ -112,7 +112,11 @@ class Results(BaseModel):
         for site in self.site_infos:
             server_value = getattr(site, "server", None)
             server_version_value = getattr(site, "server_version")
-            if server_value is not None and site.err_code is None:
+            if (
+                server_value is not None
+                and site.err_code is None
+                and server_value != "unavailable"
+            ):
                 counter[server_value] += 1
                 server_version_counter[server_value][server_version_value] += 1
             else:
@@ -132,7 +136,9 @@ class Results(BaseModel):
 
         return stats, server_version_stats
 
-    def _caclulate_percentage(self, counter: Dict[str, int]) -> Dict[str, float]:
+    def _caclulate_percentage(
+            self, counter: Dict[str, int]
+            ) -> Dict[str, float]:
         total: int = sum(counter.values())
         if total == 0:
             return {}
