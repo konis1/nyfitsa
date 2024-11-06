@@ -51,11 +51,6 @@ class SiteInfos(BaseModel):
     _response: Response | None = None
 
 
-# fields are the class SIteInfos attributes except url, err_code and response
-# fields = [k for k in SiteInfos.model_fields if k not in
-#           ["url", "err_code", "_response"]]
-
-# Literal composed of the different headers
 StatType = Literal[
     "server",
     "server_version",
@@ -264,5 +259,6 @@ def get_server_version_number(server_header: str) -> str | None:
     version_number: List[str] = server_header.split("/")
     if len(version_number) > 1:
         version_number = version_number[-1].split()
-        return version_number[0]
+        version_number_clean: str = version_number[0].strip("()")
+        return version_number_clean
     return "No server version"
