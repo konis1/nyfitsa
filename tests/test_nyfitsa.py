@@ -5,7 +5,8 @@ from unittest.mock import MagicMock, patch
 from src.nyfitsa.nyfitsa import (
     fetch_headers,
     fetch_single_site_infos,
-    get_server_version_number
+    get_server_version_number,
+    get_server_version,
 )
 from src.nyfitsa.nyfitsa import SiteInfos, Results, ErrorCode
 
@@ -463,3 +464,17 @@ def test_get_server_version_number_no_version():
     expected_result = "No server version"
 
     assert result == expected_result
+
+
+def test_get_server_version_no_version():
+    result = get_server_version("Apache")
+    expected_result = "Apache"
+
+    assert result == expected_result
+
+
+def test_calculate_percentage_empty_list():
+    results: Results = Results(site_infos=[])
+    percentage = results._caclulate_percentage({})
+
+    assert percentage == {}
