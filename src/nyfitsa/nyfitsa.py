@@ -168,7 +168,9 @@ class Results(BaseModel):
 
         return stats
 
-    def stats_server(self) -> Dict[str, float]:
+    def stats_server(self) -> Tuple[
+            Dict[str, float], Dict[str, Dict[str, float]]
+            ]:
         return self._calculate_server_stats()
 
     def stats_server_version(self) -> Dict[str, float]:
@@ -191,7 +193,7 @@ class Results(BaseModel):
             stat_type: StatType | None = None
             ) -> None:
         stats: Dict[str, float] | None = None
-
+        server_version_stats: Dict[str, Dict[str, float]] | None = None
         # Handle case where no `stat_type` is provided
         if not stat_type:
             print("No statistic type was provided.")
@@ -199,7 +201,7 @@ class Results(BaseModel):
 
         # Appeler la méthode en fonction du type de statistique demandé
         if stat_type == "server":
-            stats = self.stats_server()
+            stats, server_version_stats = self.stats_server()
         elif stat_type == "server_version":
             stats = self.stats_server_version()
         elif stat_type == "xss_protection":
@@ -220,6 +222,14 @@ class Results(BaseModel):
             print("="*50)
             for key, percentage in stats.items():
                 print(f"- {key}: {percentage:.2f}%")
+                if server_version_stats is not None and\
+                        key in server_version_stats:
+                    for version, version_percentage in \
+                            server_version_stats[key].items():
+                        print(
+                            f"  - {version}: {version_percentage:.2f}%"
+                            )
+
             print("="*50 + "\n")
         else:
             print("\n" + "="*50)
@@ -274,7 +284,7 @@ def fetch_single_site_infos(url: str) -> Dict[str, Any]:
 
         headers: Dict[str, str] = fetch_headers(response)
         d |= {
-            "server": headers["server"],
+            "server": get_server_version(headers["server"]),
             "server_version": get_server_version_number(headers["server"]),
             "x_frame_options": headers["x_frame_options"],
             "x_content_type_options": headers["x_content_type_options"],
