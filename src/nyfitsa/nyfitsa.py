@@ -124,12 +124,7 @@ class Results(BaseModel):
             else:
                 counter["unavailable"] += 1
 
-        stats: Dict[str, float] = {}
-        total: int = sum(counter.values())
-
-        if total > 0:
-            for element, qty in counter.items():
-                stats[element] = round((qty / total) * 100, 2)
+        stats: Dict[str, float] = self._caclulate_percentage(counter)
         stats = dict(sorted(stats.items(), key=lambda x: x[1], reverse=True))
 
         server_version_stats: Dict[str, Dict[str, float]] = {}
@@ -141,6 +136,14 @@ class Results(BaseModel):
             }
 
         return stats, server_version_stats
+
+    def _caclulate_percentage(self, counter: Dict[str, int]) -> Dict[str, float]:
+        total: int = sum(counter.values())
+        if total == 0:
+            return {}
+        return {
+            key: round((qty / total) * 100, 2) for key, qty in counter.items()
+        }
 
     def _calculate_stats(self, header: str) -> Dict[str, float]:
         counter: Dict[str, int] = defaultdict(int)
@@ -158,12 +161,7 @@ class Results(BaseModel):
             else:
                 counter["unavailable"] += 1
 
-        stats: Dict[str, float] = {}
-        total: int = sum(counter.values())
-
-        if total > 0:
-            for element, qty in counter.items():
-                stats[element] = round((qty / total) * 100, 2)
+        stats: Dict[str, float] = self._caclulate_percentage(counter)
         stats = dict(sorted(stats.items(), key=lambda x: x[1], reverse=True))
 
         return stats
