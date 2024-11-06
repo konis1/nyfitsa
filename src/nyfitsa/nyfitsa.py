@@ -178,9 +178,6 @@ class Results(BaseModel):
             ]:
         return self._calculate_server_stats()
 
-    def stats_server_version(self) -> Dict[str, float]:
-        return self._calculate_stats("server_version")
-
     def stats_xss_protection(self) -> Dict[str, float]:
         return self._calculate_stats("xss_protection")
 
