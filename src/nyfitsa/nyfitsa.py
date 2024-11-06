@@ -101,6 +101,35 @@ class Results(BaseModel):
     """
     site_infos: List[SiteInfos]
 
+    def _calculate_server_stats(self):
+        counter: Dict[str, int] = defaultdict(int)
+        # server_version_counter: Dict[str, Dict[str, int]] = {}
+
+        for site in self.site_infos:
+            server_value = getattr(site, "server", None)
+            # server_version_value = getattr(site, "server_version")
+            if server_value is not None and site.err_code is None:
+                server_value = get_server_version(server_value)
+                counter[server_value] += 1
+            elif site.err_code == ErrorCode.TIMEOUT:
+                counter["timeout"] += 1
+            elif site.err_code == ErrorCode.CONNECTION_ERROR:
+                counter["connection_error"] += 1
+            elif site.err_code == ErrorCode.HTTP_ERROR:
+                counter["http_error"] += 1
+            else:
+                counter["unavailable"] += 1
+
+        stats: Dict[str, float] = {}
+        total: int = sum(counter.values())
+
+        if total > 0:
+            for element, qty in counter.items():
+                stats[element] = round((qty / total) * 100, 2)
+        stats = dict(sorted(stats.items(), key=lambda x: x[1], reverse=True))
+
+        return stats
+
     def _calculate_stats(self, header: str) -> Dict[str, float]:
         counter: Dict[str, int] = defaultdict(int)
 
@@ -128,7 +157,7 @@ class Results(BaseModel):
         return stats
 
     def stats_server(self) -> Dict[str, float]:
-        return self._calculate_stats("server")
+        return self._calculate_server_stats()
 
     def stats_server_version(self) -> Dict[str, float]:
         return self._calculate_stats("server_version")
@@ -255,10 +284,19 @@ def fetch_single_site_infos(url: str) -> Dict[str, Any]:
     return d
 
 
-def get_server_version_number(server_header: str) -> str | None:
+def get_server_version_number(server_header: str) -> str:
     version_number: List[str] = server_header.split("/")
     if len(version_number) > 1:
         version_number = version_number[-1].split()
         version_number_clean: str = version_number[0].strip("()")
         return version_number_clean
     return "No server version"
+
+
+def get_server_version(server_header: str) -> str:
+    server: List[str] = server_header.split("/")
+    if len(server) > 1:
+        server = server[0].split()
+        server_clean: str = server[0].strip("()")
+        return server_clean
+    return server_header
