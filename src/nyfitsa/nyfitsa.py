@@ -115,7 +115,6 @@ class Results(BaseModel):
             if (
                 server_value is not None
                 and site.err_code is None
-                and server_value != "unavailable"
             ):
                 counter[server_value] += 1
                 server_version_counter[server_value][server_version_value] += 1
@@ -204,8 +203,6 @@ class Results(BaseModel):
         # Appeler la méthode en fonction du type de statistique demandé
         if stat_type == "server":
             stats, server_version_stats = self.stats_server()
-        elif stat_type == "server_version":
-            stats = self.stats_server_version()
         elif stat_type == "xss_protection":
             stats = self.stats_xss_protection()
         elif stat_type == "x_frame_options":
@@ -224,8 +221,10 @@ class Results(BaseModel):
             print("="*50)
             for key, percentage in stats.items():
                 print(f"- {key}: {percentage:.2f}%")
-                if server_version_stats is not None and\
-                        key in server_version_stats:
+                if (
+                    server_version_stats is not None
+                    and key in server_version_stats
+                ):
                     for version, version_percentage in \
                             server_version_stats[key].items():
                         print(

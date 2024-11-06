@@ -90,6 +90,7 @@ class TestResults():
     google_site_infos = SiteInfos(
         url="http://www.google.com",
         server="nginx",
+        server_version="1.18.1",
         x_frame_options="test",
         x_content_type_options="test",
         referrer_policy="test",
@@ -100,6 +101,7 @@ class TestResults():
     wikipedia_site_infos = SiteInfos(
         url="http://www.wikipedia.com",
         server="nginx",
+        server_version="No server version",
         x_frame_options="test",
         x_content_type_options="test",
         referrer_policy="test",
@@ -109,15 +111,23 @@ class TestResults():
 
     def test_calculate_stats_valid(self):
 
-        expected_results: Dict[str, float] = {
+        expected_server_stats_results: Dict[str, float] = {
             "nginx": 100.0,
+        }
+        expected_server_version_stats_results: Dict[str, Dict[str, float]] = {
+            "nginx": {
+                "1.18.1": 50.0,
+                "No server version": 50.0,
+            }
         }
 
         results: Results = Results(site_infos=[
             self.google_site_infos,
             self.wikipedia_site_infos
             ])
-        assert results.stats_server() == expected_results
+        server_stats, server_version_stats = results.stats_server()
+        assert server_stats == expected_server_stats_results
+        assert server_version_stats == expected_server_version_stats_results
         assert results.stats_x_frames_options() == {"test": 100.0}
         assert results.stats_x_content_type_options() == {"test": 100.0}
         assert results.stats_referrer_policy() == {"test": 100.0}
@@ -125,7 +135,7 @@ class TestResults():
 
     def test_calculate_stats_unavailable(self):
 
-        expected_results: Dict[str, float] = {
+        expected_server_stats_results: Dict[str, float] = {
             "unavailable": 100.0,
         }
 
@@ -135,7 +145,10 @@ class TestResults():
             self.google_site_infos,
             self.wikipedia_site_infos
             ])
-        assert results.stats_server() == expected_results
+        server_stats, server_version_stats = results.stats_server()
+
+        assert server_stats == expected_server_stats_results
+        assert server_version_stats == {}
 
 
 class TestResultsErrors():
@@ -172,7 +185,10 @@ class TestResultsErrors():
             self.wikipedia_site_infos
             ])
 
-        assert results.stats_server() == expected_results
+        server_stats, server_version_stats = results.stats_server()
+
+        assert server_stats == expected_results
+        assert server_version_stats == {}
         assert results.stats_x_frames_options() == expected_results
         assert results.stats_x_content_type_options() == expected_results
         assert results.stats_referrer_policy() == expected_results
@@ -190,8 +206,10 @@ class TestResultsErrors():
             self.google_site_infos,
             self.wikipedia_site_infos
             ])
+        server_stats, server_version_stats = results.stats_server()
 
-        assert results.stats_server() == expected_results
+        assert server_stats == expected_results
+        assert server_version_stats == {}
         assert results.stats_x_frames_options() == expected_results
         assert results.stats_x_content_type_options() == expected_results
         assert results.stats_referrer_policy() == expected_results
@@ -209,8 +227,10 @@ class TestResultsErrors():
             self.google_site_infos,
             self.wikipedia_site_infos
             ])
+        server_stats, server_version_stats = results.stats_server()
 
-        assert results.stats_server() == expected_results
+        assert server_stats == expected_results
+        assert server_version_stats == {}
         assert results.stats_x_frames_options() == expected_results
         assert results.stats_x_content_type_options() == expected_results
         assert results.stats_referrer_policy() == expected_results
@@ -281,7 +301,7 @@ class TestFetchSingleSiteInfos():
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.headers = {
-            "server": "nginx",
+            "server": "nginx/1.18.1",
             "X-Frame-Options": "test",
             "X-Content-Type-Options": "test",
             "Referrer-Policy": "test",
@@ -292,6 +312,7 @@ class TestFetchSingleSiteInfos():
         expected_result: Dict[str, Any] = {
             "url": self.url,
             "server": "nginx",
+            "server_version": "1.18.1",
             "x_frame_options": "test",
             "x_content_type_options": "test",
             "referrer_policy": "test",
@@ -310,6 +331,7 @@ class TestPrintStats():
     google_site_infos = SiteInfos(
         url="http://www.google.com",
         server="nginx",
+        server_version="1.18.1",
         x_frame_options="test",
         x_content_type_options="test",
         referrer_policy="test",
@@ -320,6 +342,7 @@ class TestPrintStats():
     wikipedia_site_infos = SiteInfos(
         url="http://www.wikipedia.com",
         server="nginx",
+        server_version="1.18.1",
         x_frame_options="test",
         x_content_type_options="test",
         referrer_policy="test",
@@ -335,7 +358,7 @@ class TestPrintStats():
             self.google_site_infos,
             self.wikipedia_site_infos
             ])
-        expected_print: str = self.expected_print("Server", "nginx: 100.00%")
+        expected_print: str = "\n==================================================\nStatistics for: Server\n==================================================\n- nginx: 100.00%\n  - 1.18.1: 100.00%\n==================================================\n\n"
         results.print_stats("server")
 
         printed: tuple[str, str] = capsys.readouterr()
