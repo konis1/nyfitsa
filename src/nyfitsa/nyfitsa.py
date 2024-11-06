@@ -115,14 +115,9 @@ class Results(BaseModel):
             if server_value is not None and site.err_code is None:
                 counter[server_value] += 1
                 server_version_counter[server_value][server_version_value] += 1
-            elif site.err_code == ErrorCode.TIMEOUT:
-                counter["timeout"] += 1
-            elif site.err_code == ErrorCode.CONNECTION_ERROR:
-                counter["connection_error"] += 1
-            elif site.err_code == ErrorCode.HTTP_ERROR:
-                counter["http_error"] += 1
             else:
-                counter["unavailable"] += 1
+                error_key = self._get_error_key(site.err_code)
+                counter[error_key] += 1
 
         stats: Dict[str, float] = self._caclulate_percentage(counter)
         stats = dict(sorted(stats.items(), key=lambda x: x[1], reverse=True))
@@ -145,6 +140,17 @@ class Results(BaseModel):
             key: round((qty / total) * 100, 2) for key, qty in counter.items()
         }
 
+    def _get_error_key(self, err_code: ErrorCode | None) -> str:
+        if err_code is None:
+            return "unavailable"
+
+        error_map: Dict[ErrorCode, str] = {
+            ErrorCode.TIMEOUT: "timeout",
+            ErrorCode.CONNECTION_ERROR: "connection_error",
+            ErrorCode.HTTP_ERROR: "http_error",
+        }
+        return error_map.get(err_code, "unavailable")
+
     def _calculate_stats(self, header: str) -> Dict[str, float]:
         counter: Dict[str, int] = defaultdict(int)
 
@@ -152,14 +158,9 @@ class Results(BaseModel):
             value = getattr(site, header, None)
             if value is not None and site.err_code is None:
                 counter[value] += 1
-            elif site.err_code == ErrorCode.TIMEOUT:
-                counter["timeout"] += 1
-            elif site.err_code == ErrorCode.CONNECTION_ERROR:
-                counter["connection_error"] += 1
-            elif site.err_code == ErrorCode.HTTP_ERROR:
-                counter["http_error"] += 1
             else:
-                counter["unavailable"] += 1
+                error_key = self._get_error_key(site.err_code)
+                counter[error_key] += 1
 
         stats: Dict[str, float] = self._caclulate_percentage(counter)
         stats = dict(sorted(stats.items(), key=lambda x: x[1], reverse=True))
