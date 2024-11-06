@@ -1,6 +1,6 @@
 from collections import defaultdict
 from enum import Enum
-from typing import Dict, List, Any, Literal
+from typing import Dict, List, Any, Literal, Tuple
 import os
 
 from pydantic import BaseModel
@@ -101,16 +101,20 @@ class Results(BaseModel):
     """
     site_infos: List[SiteInfos]
 
-    def _calculate_server_stats(self):
+    def _calculate_server_stats(self) -> Tuple[
+            Dict[str, float], Dict[str, Dict[str, float]]
+            ]:
         counter: Dict[str, int] = defaultdict(int)
-        # server_version_counter: Dict[str, Dict[str, int]] = {}
+        server_version_counter: Dict[str, Dict[str, int]] = defaultdict(
+            lambda: defaultdict(int)
+            )
 
         for site in self.site_infos:
             server_value = getattr(site, "server", None)
-            # server_version_value = getattr(site, "server_version")
+            server_version_value = getattr(site, "server_version")
             if server_value is not None and site.err_code is None:
-                server_value = get_server_version(server_value)
                 counter[server_value] += 1
+                server_version_counter[server_value][server_version_value] += 1
             elif site.err_code == ErrorCode.TIMEOUT:
                 counter["timeout"] += 1
             elif site.err_code == ErrorCode.CONNECTION_ERROR:
@@ -128,7 +132,15 @@ class Results(BaseModel):
                 stats[element] = round((qty / total) * 100, 2)
         stats = dict(sorted(stats.items(), key=lambda x: x[1], reverse=True))
 
-        return stats
+        server_version_stats: Dict[str, Dict[str, float]] = {}
+        for server_type, versions in server_version_counter.items():
+            total_versions: int = sum(versions.values())
+            server_version_stats[server_type] = {
+                version: round((qty / total_versions) * 100, 2)
+                for version, qty in versions.items()
+            }
+
+        return stats, server_version_stats
 
     def _calculate_stats(self, header: str) -> Dict[str, float]:
         counter: Dict[str, int] = defaultdict(int)
