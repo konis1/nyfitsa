@@ -1,4 +1,7 @@
-from src.nyfitsa.nyfitsa import fetching_urls_concurrently, parralelize_fetching
+from src.nyfitsa.nyfitsa import (
+    fetching_urls_concurrently,
+    parralelize_fetching
+)
 from typing import List
 
 import timeit

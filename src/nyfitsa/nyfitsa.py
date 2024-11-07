@@ -267,7 +267,7 @@ def fetching_urls_concurrently(urls: List[str]) -> Results:
             executor.submit(fetch_single_site_infos, url):
             url for url in urls
             }
-        for future in tqdm(
+        for future in tqdm( 
             as_completed(future_to_url),
             total=len(urls),
             desc="Getting sites infos",
