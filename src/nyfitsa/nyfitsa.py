@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Dict, List, Any, Literal, Tuple
 import os
 
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from pydantic import BaseModel
 import multiprocessing
 import requests
@@ -255,6 +256,26 @@ def fetch_headers(response: Response) -> Dict[str, str]:
         "referrer_policy": headers.get("Referrer-Policy", "unavailable"),
         "xss_protection": headers.get("X-XSS-Protection", "unavailable"),
     }
+
+
+def fetching_urls_concurrently(urls: List[str]) -> Results:
+    websites: List[Dict[str, Any]] = []
+    workers: int | None = min(os.cpu_count() or 1, 8)
+
+    with ThreadPoolExecutor(max_workers= workers) as executor:
+        future_to_url = {
+            executor.submit(fetch_single_site_infos, url):
+            url for url in urls
+            }
+        for future in tqdm(
+            as_completed(future_to_url),
+            total=len(urls),
+            desc="Getting sites infos",
+            colour="green"
+        ):
+            websites.append(future.result())
+    results = Results.model_validate({"site_infos": websites})
+    return results
 
 
 def parralelize_fetching(urls: List[str]) -> Results:
