@@ -1,7 +1,8 @@
 from pathlib import Path
 from pydantic import BaseModel
 import tyro
-from .nyfitsa import Results, parralelize_fetching
+# from .nyfitsa import Results, parralelize_fetching
+from .nyfitsa import Results, fetching_urls_concurrently
 
 
 class NyfitsaConfig(BaseModel):
@@ -69,7 +70,8 @@ def main():
             # Put each url / line in a list
             for line in file:
                 config.urls.append(line.strip())
-    stats: Results = parralelize_fetching(config.urls)
+    # stats: Results = parralelize_fetching(config.urls)
+    stats: Results = fetching_urls_concurrently(config.urls)
     if config.stats_server:
         stats.print_stats("server")
     if config.stats_x_content_type_options:

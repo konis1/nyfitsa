@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Dict, List, Any, Literal, Tuple
 import os
 
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pydantic import BaseModel
 import multiprocessing
 import requests
@@ -262,7 +262,7 @@ def fetching_urls_concurrently(urls: List[str]) -> Results:
     websites: List[Dict[str, Any]] = []
     workers: int | None = min(os.cpu_count() or 1, 8)
 
-    with ThreadPoolExecutor(max_workers= workers) as executor:
+    with ThreadPoolExecutor(max_workers=workers) as executor:
         future_to_url = {
             executor.submit(fetch_single_site_infos, url):
             url for url in urls
