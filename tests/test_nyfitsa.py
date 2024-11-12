@@ -1,18 +1,13 @@
 
-from typing import Dict, Any
+from typing import Any, Dict
 from unittest.mock import MagicMock, patch
 
-from src.nyfitsa.nyfitsa import (
-    fetch_headers,
-    fetch_single_site_infos,
-    get_server_version_number,
-    get_server_version,
-)
-from src.nyfitsa.nyfitsa import SiteInfos, Results, ErrorCode
-
 import requests
-
 from pytest import CaptureFixture
+
+from nyfitsa.nyfitsa import (ErrorCode, Results, SiteInfos, fetch_headers,
+                             fetch_single_site_infos, get_server_version,
+                             get_server_version_number)
 
 
 class Test_FetchHeaders():

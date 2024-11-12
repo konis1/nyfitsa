@@ -1,14 +1,15 @@
-from collections import defaultdict
-from enum import Enum
-from typing import Dict, List, Any, Literal, Tuple
-import os
-
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from pydantic import BaseModel
 import multiprocessing
+import os
+from collections import defaultdict
+from concurrent.futures import (ProcessPoolExecutor, ThreadPoolExecutor,
+                                as_completed)
+from enum import Enum
+from typing import Any, Dict, List, Literal, Tuple
+
 import requests
+from pydantic import BaseModel
 from requests import Response, structures
-from requests.exceptions import Timeout, ConnectionError, HTTPError
+from requests.exceptions import ConnectionError, HTTPError, Timeout
 from tqdm import tqdm
 
 
@@ -267,7 +268,7 @@ def fetching_urls_concurrently(urls: List[str]) -> Results:
             executor.submit(fetch_single_site_infos, url):
             url for url in urls
             }
-        for future in tqdm( 
+        for future in tqdm(
             as_completed(future_to_url),
             total=len(urls),
             desc="Getting sites infos",
@@ -282,6 +283,7 @@ def parralelize_fetching(urls: List[str]) -> Results:
     websites: List[Dict[str, Any]] = []
     workers: int | None = min(os.cpu_count() or 1, 8)
 
+    # with ProcessPoolExecutor(max_workers=workers) as executor:
     with multiprocessing.Pool(workers) as pool:
         for site_info in tqdm(
             pool.imap_unordered(
