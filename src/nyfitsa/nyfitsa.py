@@ -1,7 +1,7 @@
 import multiprocessing
 import os
 from collections import defaultdict
-from concurrent.futures import (ProcessPoolExecutor, ThreadPoolExecutor,
+from concurrent.futures import (ThreadPoolExecutor,
                                 as_completed)
 from enum import Enum
 from typing import Any, Dict, List, Literal, Tuple

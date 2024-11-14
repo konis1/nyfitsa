@@ -5,11 +5,14 @@ from tqdm import tqdm
 from concurrent.futures import (ProcessPoolExecutor, ThreadPoolExecutor,
                                 as_completed)
 
+import pandas as pd
+import matplotlib.pyplot as plt
+
 from nyfitsa.nyfitsa import fetch_single_site_infos, Results
 
 urls: List[str] = []
 
-with open("urls.txt", "r") as file:
+with open("../urls.txt", "r") as file:
     for line in file:
         urls.append(line.strip())
 
@@ -40,7 +43,12 @@ def fetching_urls_concurrent(
 
 
 cpu: int | None = os.cpu_count()
-workers: List[int] = [2, cpu, cpu*2] if cpu is not None else [2]
+workers: List[int] = [int(cpu/2), cpu, cpu*2] if cpu is not None else [8]
+benchmark_results: Dict[str, List[Any]] = {
+    "Worker Count": [],
+    "ThreadPoolExecutorTime": [],
+    "ProcessPoolExecutorTime": [],
+}
 
 
 def benchmark_fetching_urls_concurrent(
@@ -58,13 +66,20 @@ for worker in workers:
     thread_time = benchmark_fetching_urls_concurrent(True, worker)
     process_time = benchmark_fetching_urls_concurrent(False, worker)
 
-    # Display results
-    print(f"Worker count: {worker}")
-    print(f"ThreadPoolExecutor time: {thread_time:.2f} seconds")
-    print(f"ProcessPoolExecutor time: {process_time:.2f} seconds")
+    benchmark_results["Worker Count"].append(worker)
+    benchmark_results["ThreadPoolExecutorTime"].append(thread_time)
+    benchmark_results["ProcessPoolExecutorTime"].append(process_time)
 
-    # Compare results
-    if thread_time < process_time:
-        print("ThreadPoolExecutor is faster")
-    else:
-        print("ProcessPoolExecutor is faster")
+df = pd.DataFrame(benchmark_results)
+
+# Plot the results as a bar graph
+df.set_index("Worker Count").plot(kind="bar", width=0.8)
+
+# Add labels and title
+plt.xlabel("Worker Count")
+plt.ylabel("Execution Time (seconds)")
+plt.title("Benchmark: ThreadPoolExecutor vs ProcessPoolExecutor")
+plt.legend(["ThreadPoolExecutor", "ProcessPoolExecutor"])
+
+plt.savefig("bar_graph.png")
+print("Graph saved as 'bar_graph.png'")
