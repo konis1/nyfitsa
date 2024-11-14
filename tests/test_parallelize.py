@@ -1,7 +1,6 @@
 import timeit
 from typing import List, Dict, Any
 import os
-import multiprocessing
 from tqdm import tqdm
 from concurrent.futures import (ProcessPoolExecutor, ThreadPoolExecutor,
                                 as_completed)
@@ -15,15 +14,16 @@ with open("urls.txt", "r") as file:
         urls.append(line.strip())
 
 
-def fetching_urls_conccurent(
+def fetching_urls_concurrent(
         urls: List[str],
-        use_threads: bool = True
+        number_of_workers: int,
+        use_threads: bool = True,
         ) -> Results:
     websites: List[Dict[str, Any]] = []
-    workers: int | None = min(os.cpu_count() or 1, 8)
+
     class_executor = ThreadPoolExecutor if use_threads else ProcessPoolExecutor
 
-    with class_executor(max_workers=workers) as executor:
+    with class_executor(max_workers=number_of_workers) as executor:
         future_to_url = {
             executor.submit(fetch_single_site_infos, url):
             url for url in urls
@@ -39,46 +39,32 @@ def fetching_urls_conccurent(
     return results
 
 
-def parralelize_fetching(urls: List[str]) -> Results:
-    websites: List[Dict[str, Any]] = []
-    workers: int | None = min(os.cpu_count() or 1, 8)
-
-    # with ProcessPoolExecutor(max_workers=workers) as executor:
-    with multiprocessing.Pool(workers) as pool:
-        for site_info in tqdm(
-            pool.imap_unordered(
-                fetch_single_site_infos,
-                urls
-                ),
-            total=len(urls),
-            desc="Getting sites infos",
-            colour="green"
-        ):
-            websites.append(site_info)
-    results = Results.model_validate({"site_infos": websites})
-    return results
+cpu: int | None = os.cpu_count()
+workers: List[int] = [2, cpu, cpu*2] if cpu is not None else [2]
 
 
-def benchmark_fetching_urls_concurrently():
-    fetching_urls_concurrently(urls)
-
-
-def benchmark_parralelize_fetching():
-    parralelize_fetching(urls)
-
-
-# Run benchmarks
-concurrent_time: float = timeit.timeit(
-    benchmark_fetching_urls_concurrently, number=5
+def benchmark_fetching_urls_concurrent(
+        use_threads: bool,
+        worker: int
+        ) -> float:
+    return timeit.timeit(
+        lambda: fetching_urls_concurrent(urls, worker, use_threads),
+        number=5
     )
-parallel_time: float = timeit.timeit(benchmark_parralelize_fetching, number=5)
 
-# Display results
-print(f"ThreadPoolExecutor time: {concurrent_time:.2f} seconds")
-print(f"multiprocessing.Pool time: {parallel_time:.2f} seconds")
 
-# Compare results
-if concurrent_time < parallel_time:
-    print("fetching_urls_concurrently (ThreadPoolExecutor) is faster")
-else:
-    print("parralelize_fetching (multiprocessing.Pool) is faster")
+for worker in workers:
+
+    thread_time = benchmark_fetching_urls_concurrent(True, worker)
+    process_time = benchmark_fetching_urls_concurrent(False, worker)
+
+    # Display results
+    print(f"Worker count: {worker}")
+    print(f"ThreadPoolExecutor time: {thread_time:.2f} seconds")
+    print(f"ProcessPoolExecutor time: {process_time:.2f} seconds")
+
+    # Compare results
+    if thread_time < process_time:
+        print("ThreadPoolExecutor is faster")
+    else:
+        print("ProcessPoolExecutor is faster")
