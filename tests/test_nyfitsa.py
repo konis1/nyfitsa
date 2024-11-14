@@ -470,6 +470,6 @@ def test_get_server_version_no_version():
 
 def test_calculate_percentage_empty_list():
     results: Results = Results(site_infos=[])
-    percentage = results._caclulate_percentage({})
+    percentage = results._caclulate_percentage({})  # type: ignore
 
     assert percentage == {}

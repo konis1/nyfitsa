@@ -1,4 +1,4 @@
-import multiprocessing
+
 import os
 from collections import defaultdict
 from concurrent.futures import (ThreadPoolExecutor,
@@ -275,26 +275,6 @@ def fetching_urls_concurrently(urls: List[str]) -> Results:
             colour="green"
         ):
             websites.append(future.result())
-    results = Results.model_validate({"site_infos": websites})
-    return results
-
-
-def parralelize_fetching(urls: List[str]) -> Results:
-    websites: List[Dict[str, Any]] = []
-    workers: int | None = min(os.cpu_count() or 1, 8)
-
-    # with ProcessPoolExecutor(max_workers=workers) as executor:
-    with multiprocessing.Pool(workers) as pool:
-        for site_info in tqdm(
-            pool.imap_unordered(
-                fetch_single_site_infos,
-                urls
-                ),
-            total=len(urls),
-            desc="Getting sites infos",
-            colour="green"
-        ):
-            websites.append(site_info)
     results = Results.model_validate({"site_infos": websites})
     return results
 

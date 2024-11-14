@@ -73,13 +73,13 @@ for worker in workers:
 df = pd.DataFrame(benchmark_results)
 
 # Plot the results as a bar graph
-df.set_index("Worker Count").plot(kind="bar", width=0.8)
+df.set_index("Worker Count").plot(kind="bar", width=0.8)  # type: ignore
 
 # Add labels and title
-plt.xlabel("Worker Count")
-plt.ylabel("Execution Time (seconds)")
-plt.title("Benchmark: ThreadPoolExecutor vs ProcessPoolExecutor")
-plt.legend(["ThreadPoolExecutor", "ProcessPoolExecutor"])
+plt.xlabel("Worker Count")  # type: ignore
+plt.ylabel("Execution Time (seconds)")  # type: ignore
+plt.title("Benchmark: ThreadPoolExecutor vs ProcessPoolExecutor")  # type: ignore
+plt.legend(["ThreadPoolExecutor", "ProcessPoolExecutor"])  # type: ignore
 
-plt.savefig("bar_graph.png")
+plt.savefig("bar_graph.png")  # type: ignore
 print("Graph saved as 'bar_graph.png'")
